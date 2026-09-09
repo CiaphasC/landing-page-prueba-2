@@ -71,7 +71,7 @@
             if (theme === 'light') { root.classList.add('light'); }
             else { root.classList.remove('light'); }
             var meta = document.querySelector('meta[name="theme-color"]');
-            if (meta) meta.setAttribute('content', theme === 'light' ? '#F8F9FA' : '#0a0a0a');
+            if (meta) meta.setAttribute('content', theme === 'light' ? '#F6F6F4' : '#0a0a0a');
         } catch (e) { /* localStorage blocked → keep default dark */ }
     })();
     </script>
@@ -79,7 +79,26 @@
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@100..125,500..900&family=Inter:wght@300;400;500;600&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <script>
+        /* Preload the hero artwork matching the theme the IIFE above just
+           resolved. The artwork is painted as a CSS background so that only
+           one of the two theme variants is ever fetched, which also means it
+           cannot carry fetchpriority itself — this link is what keeps the LCP
+           candidate off the tail of the request queue. */
+        (function () {
+            var light = document.documentElement.classList.contains('light');
+            var size = window.innerWidth >= 1600 ? '2400' : (window.innerWidth >= 1024 ? '1600' : '900');
+            var link = document.createElement('link');
+            link.rel = 'preload';
+            link.as = 'image';
+            link.type = 'image/avif';
+            link.href = 'images/hero-nexus-' + (light ? '' : 'dark-') + size + '.avif';
+            link.setAttribute('fetchpriority', 'high');
+            document.head.appendChild(link);
+        })();
+    </script>
 
     <!-- Phosphor Icons (CSS webfont — eliminates FOUC vs. the JS loader) -->
     <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web/src/regular/style.css">
@@ -98,6 +117,8 @@
 
     <!-- Lenis smooth scroll (v3) — defer so it loads in parallel but executes before main script -->
     <script src="https://unpkg.com/lenis@1.1.13/dist/lenis.min.js" defer></script>
+
+
 
     <script>
         tailwind.config = {
@@ -153,10 +174,12 @@
             --color-muted: #a3a3a3;
             --color-accent: #FF3366;
             --color-accent-2: #7C3AED;
+            --color-accent-cyan: #00F2FE;
             --color-success: #10b981;
             --color-error: #ef4444;
 
             --hero-orb-opacity: 0.20;
+            --wireframe-color: rgba(255, 255, 255, 0.10);
             --glass-bg: rgba(10, 10, 10, 0.7);
             --text-stroke-color: rgba(255, 255, 255, 0.25);
             --ring-color: rgba(255, 255, 255, 0.05);
@@ -184,13 +207,14 @@
         }
 
         html.light {
-            --color-bg: #F8F9FA;
+            --color-bg: #F6F6F4;   /* paper neutral: matches the baked hero artwork ground */
             --color-surface: #FFFFFF;
             --color-surface-2: #EEF0F2;
             --color-border: rgba(15, 23, 42, 0.08);
             --color-text: #0F172A;
             --color-muted: #64748B;
             --hero-orb-opacity: 0.10;
+            --wireframe-color: rgba(15, 23, 42, 0.18);
             --glass-bg: rgba(248, 249, 250, 0.8);
             --text-stroke-color: rgba(15, 23, 42, 0.20);
             --ring-color: rgba(15, 23, 42, 0.10);
@@ -313,27 +337,16 @@
             transition: color 0.3s ease, -webkit-text-stroke 0.3s ease;
         }
 
-        /* v3.2 — Hero baseline visibility safety net.
-           GSAP `from({ opacity: 0, ... })` sets the FROM state with
-           immediateRender, then animates to the natural state. If the
-           animation never fires (prefers-reduced-motion: reduce flips
-           the matchMedia off, or a JS error breaks the GSAP init), the
-           elements would stay at opacity 0 forever and the entire hero
-           would be invisible (only the orbs and SCROLL indicator would
-           show). This baseline rule makes the hero content visible by
-           default. When GSAP runs, its inline styles override this
-           baseline; when GSAP doesn't run, the CSS keeps the hero
-           visible. */
-        .gsap-hero-badge,
-        .gsap-hero-text span,
-        .gsap-hero-sub,
-        .gsap-hero-btn > * { opacity: 1; }
+        /* v4 — the hero baseline visibility net now lives with the rest
+           of the hero rules further down, next to the markup it protects. */
         .text-stroke:hover {
             color: var(--color-text);
             -webkit-text-stroke: 1.5px transparent;
         }
         /* Light-mode ghost fill — same 8% on the off-white canvas */
         html.light .text-stroke { color: rgba(15, 23, 42, 0.08); }
+
+        /* ============================================================
 
         .reveal-img { clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%); }
 
@@ -503,6 +516,493 @@
         #mobile-menu { background-color: var(--color-bg); }
         html.light #mobile-menu { background-color: rgba(248, 249, 250, 0.97); }
         #mobile-menu { transition: background-color 0.25s ease; }
+
+        /* ============================================================
+           Hero v4 — split editorial composition.
+           Tokens are declared for BOTH themes on purpose: the site boots
+           dark unless localStorage says otherwise, so a light-only hero
+           would render near-black ink on a near-black ground for every
+           first-time visitor.
+           ============================================================ */
+        :root {
+            --font-hero: 'Archivo', 'Space Grotesk', system-ui, sans-serif;
+            --hero-ink: #f5f5f5;
+            --hero-body: #a3a3a3;
+            --hero-badge-bg: rgba(255, 255, 255, 0.06);
+            --hero-badge-ink: #FF6B8F;
+            --hero-stroke: rgba(255, 255, 255, 0.55);
+            --hero-hairline: rgba(255, 255, 255, 0.18);
+            --hero-band: rgba(255, 255, 255, 0.055);
+            --hero-band-blend: overlay;
+        }
+
+        html.light {
+            /* #C81E4A rather than the brand #FF3366: at 11px on paper the
+               brand pink lands around 3.3:1, under the 4.5:1 AA floor. */
+            --hero-ink: #0E0E0C;
+            --hero-body: #6B6B66;
+            --hero-badge-bg: #ECECE8;
+            --hero-badge-ink: #C81E4A;
+            --hero-stroke: rgba(20, 20, 18, 0.82);
+            --hero-hairline: rgba(20, 20, 18, 0.14);
+            --hero-band: rgba(20, 20, 18, 0.028);
+            --hero-band-blend: multiply;
+        }
+
+        .hero {
+            position: relative;
+            min-height: 100vh;
+            min-height: 100svh;      /* svh kills the Safari iOS toolbar jump */
+            display: grid;
+            grid-template-columns: 1fr;
+            grid-template-rows: 1fr;
+            align-items: center;
+            overflow: hidden;
+            isolation: isolate;      /* keeps the band blend from escaping */
+            background: var(--color-bg);
+            padding-block-start: 5rem;   /* clears the fixed navbar */
+        }
+
+        .hero-inner,
+        .hero-visual { grid-area: 1 / 1; }
+
+        .hero-inner {
+            position: relative;
+            z-index: 2;
+            width: 100%;
+            min-width: 0;            /* grid children default to min-width:auto */
+            max-width: 80rem;
+            margin-inline: auto;
+            padding-inline: 1.5rem;
+        }
+
+        .hero-copy { max-width: 42rem; }
+
+        .hero-badge-wrap { margin-bottom: 1.75rem; }
+
+        .hero-badge {
+            display: inline-block;
+            padding: 0.4375rem 1rem;
+            border-radius: 9999px;
+            background: var(--hero-badge-bg);
+            border: 1px solid var(--hero-hairline);
+            color: var(--hero-badge-ink);
+            font-size: 0.6875rem;
+            font-weight: 600;
+            letter-spacing: 0.16em;
+            line-height: 1;
+            text-transform: uppercase;
+        }
+
+        .hero-title {
+            font-family: var(--font-hero);
+            font-weight: 800;
+            font-stretch: 108%;      /* Archivo carries a wdth axis, 62-125% */
+            font-size: clamp(2.25rem, 1.7rem + 2.4vw, 4.5rem);
+            line-height: 0.92;
+            letter-spacing: -0.02em;
+            text-transform: uppercase;
+            color: var(--hero-ink);
+            margin-bottom: 1.75rem;
+        }
+
+        /* The tilde of the N-with-tilde in DISENAMOS sits above cap height,
+           and at line-height .92 it pokes out of the line box. The pad grows
+           the line box upward so the mask contains the glyph; the negative
+           margin that cancels the pad has to sit on the MASK, not on the
+           line -- on the line it drags the padded box back above the clip
+           and buys nothing. Measured: tildeSlackPx must stay >= 0. */
+        .hero-line-mask {
+            display: block;
+            overflow: hidden;
+            margin-top: -0.16em;
+        }
+
+        .hero-line {
+            display: block;
+            padding-top: 0.16em;
+        }
+
+        .hero-outline {
+            color: transparent;
+            -webkit-text-stroke: 1.5px var(--hero-stroke);
+        }
+
+        .hero-sub {
+            max-width: 36rem;        /* two-line break, as in the reference: the copy needs ~564px to break after "excepcionales." */
+            margin-bottom: 2.5rem;
+            color: var(--hero-body);
+            font-size: 1rem;
+            line-height: 1.65;
+        }
+
+        .hero-cta {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 0.75rem 1.5rem;
+        }
+
+        .hero-cta-primary {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.625rem;
+            padding: 0.9375rem 1.75rem;
+            border-radius: 9999px;
+            background: var(--hero-ink);
+            color: var(--color-bg);
+            font-size: 0.9375rem;
+            font-weight: 600;
+            transition: transform 160ms cubic-bezier(0.23, 1, 0.32, 1);
+        }
+
+        .hero-cta-primary i { transition: transform 200ms cubic-bezier(0.23, 1, 0.32, 1); }
+        .hero-cta-primary:active { transform: scale(0.97); }
+
+        .hero-cta-text,
+        .hero-cta-circle {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+            color: var(--hero-body);
+            font-size: 0.9375rem;
+            font-weight: 500;
+            transition: color 200ms ease;
+        }
+
+        .hero-cta-circle-ring {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 2.25rem;
+            height: 2.25rem;
+            border-radius: 9999px;
+            border: 1px solid var(--hero-hairline);
+            font-size: 0.75rem;
+            transition: border-color 200ms ease, transform 200ms cubic-bezier(0.23, 1, 0.32, 1);
+        }
+
+        .hero-cta-circle:active .hero-cta-circle-ring { transform: scale(0.94); }
+
+        @media (hover: hover) and (pointer: fine) {
+            .hero-cta-primary:hover i { transform: translateX(4px); }
+            .hero-cta-text:hover,
+            .hero-cta-circle:hover { color: var(--hero-ink); }
+            .hero-cta-circle:hover .hero-cta-circle-ring { border-color: var(--color-accent); }
+        }
+
+        .hero-scroll {
+            position: absolute;
+            left: 50%;
+            bottom: 2.5rem;
+            transform: translateX(-50%);
+            z-index: 2;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.75rem;
+            color: var(--hero-body);
+            font-size: 0.625rem;
+            letter-spacing: 0.32em;
+            text-transform: uppercase;
+            opacity: 0.7;
+            transition: opacity 200ms ease;
+        }
+
+        .hero-scroll:hover { opacity: 1; }
+
+        .hero-scroll-line {
+            width: 1px;
+            height: 3.5rem;
+            background: linear-gradient(to bottom, var(--hero-hairline), transparent);
+        }
+
+        /* -- artwork ------------------------------------------------
+           Declared as a background so the browser fetches only the
+           variant whose rule actually applies. Two themes, two files:
+           the light artwork has an off-white ground baked in and would
+           be a glaring white slab on the dark theme. -------------- */
+        .hero-visual {
+            z-index: 1;
+            min-width: 0;
+            pointer-events: none;
+            background-repeat: no-repeat;
+            background-size: cover;
+            background-position: 60% 45%;
+            background-image: url("images/hero-nexus-dark-1600.webp");
+        }
+
+        html.light .hero-visual { background-image: url("images/hero-nexus-1600.webp"); }
+
+        @media (min-width: 1600px) {
+            .hero-visual { background-image: url("images/hero-nexus-dark-2400.webp"); }
+            html.light .hero-visual { background-image: url("images/hero-nexus-2400.webp"); }
+        }
+
+        /* 900px variant below the tablet breakpoint: the box is at most a
+           phone wide, and the <head> preload picks 900 too -- without this
+           rule the page fetched 900 AND 1600. Declared here, before the
+           @supports block, so the AVIF upgrade still wins the cascade. */
+        @media (max-width: 1023px) {
+            .hero-visual { background-image: url("images/hero-nexus-dark-900.webp"); }
+            html.light .hero-visual { background-image: url("images/hero-nexus-900.webp"); }
+        }
+
+        @supports (background-image: image-set(url("i.avif") type("image/avif"))) {
+            .hero-visual { background-image: image-set(url("images/hero-nexus-dark-1600.avif") type("image/avif")); }
+            html.light .hero-visual { background-image: image-set(url("images/hero-nexus-1600.avif") type("image/avif")); }
+
+            @media (min-width: 1600px) {
+                .hero-visual { background-image: image-set(url("images/hero-nexus-dark-2400.avif") type("image/avif")); }
+                html.light .hero-visual { background-image: image-set(url("images/hero-nexus-2400.avif") type("image/avif")); }
+            }
+
+            @media (max-width: 1023px) {
+                .hero-visual { background-image: image-set(url("images/hero-nexus-dark-900.avif") type("image/avif")); }
+                html.light .hero-visual { background-image: image-set(url("images/hero-nexus-900.avif") type("image/avif")); }
+            }
+        }
+
+        /* -- diagonal bands ----------------------------------------
+           A separate sibling layer, never baked into the artwork: a
+           vector edge next to a raster render is what reads premium,
+           and CSS keeps the z-order and the blend under our control.
+           mix-blend-mode dies silently if an ancestor with a transform
+           or opacity below 1 creates a stacking context, hence the
+           isolation on .hero and no transformed wrapper between this
+           node and the section. ---------------------------------- */
+        .hero-bands {
+            position: absolute;   /* not a grid item: as one it collapsed to
+                                     height 0 in the stacked mobile layout */
+            inset: 0;
+            z-index: 3;
+            pointer-events: none;
+            mix-blend-mode: var(--hero-band-blend);
+            background: repeating-linear-gradient(
+                35deg,
+                transparent 0px,
+                transparent 58px,
+                var(--hero-band) 58px,
+                var(--hero-band) 96px);
+            /* Ramp the bands toward the artwork side. Full strength across
+               the copy column turns them into obvious stripes over the
+               headline; in the reference they live where the render is. */
+            -webkit-mask-image: linear-gradient(to right, transparent 10%, rgba(0,0,0,.10) 36%, rgba(0,0,0,.62) 60%, #000 80%, rgba(0,0,0,.5) 100%);
+                    mask-image: linear-gradient(to right, transparent 10%, rgba(0,0,0,.10) 36%, rgba(0,0,0,.62) 60%, #000 80%, rgba(0,0,0,.5) 100%);
+        }
+
+        @media (min-width: 1024px) {
+            .hero-inner { padding-inline: 3rem; }
+
+            .hero-fx,
+            .hero-visual {
+                justify-self: end;   /* pins to the SECTION edge, not the
+                                        centred container — no 100vw math,
+                                        so the scrollbar cannot push it out */
+                align-self: start;
+                width: min(58vw, 62rem);
+                height: 108%;
+                margin-top: -4%;
+                -webkit-mask-image: linear-gradient(to right, transparent 0%, #000 26%, #000 100%);
+                        mask-image: linear-gradient(to right, transparent 0%, #000 26%, #000 100%);
+            }
+
+            .hero-fx {
+                -webkit-mask-image: none;
+                        mask-image: none;
+                height: 100%;
+                margin-top: 0;
+            }
+        }
+
+        /* Baseline visibility net: GSAP writes the FROM state inline, so
+           this only matters when GSAP never runs (reduced motion, CDN
+           failure). Without it the hero can render blank with nothing in
+           the console. */
+        .hero-badge,
+        .hero-line,
+        .hero-sub,
+        .hero-cta > *,
+        .hero-visual,
+        .hero-bands,
+        .hero-scroll { opacity: 1; visibility: visible; }
+
+        @media (prefers-reduced-motion: reduce) {
+            .hero-visual,
+            .hero-bands { transform: none !important; }
+            .hero-bands { opacity: 0.5; }
+        }
+
+        /* -- moving atmosphere --------------------------------------
+           One WebGL surface replaces the four drifting PNG layers this
+           started as. Those read as pictures sliding, because their
+           edges swept in and out of frame; fog has no edges, so it has
+           to be generated rather than translated. The shader also owns
+           its own alpha falloff, which is why there is no mask here and
+           no rectangle to hide.
+           ---------------------------------------------------------- */
+        .hero-fx {
+            grid-area: 1 / 1;
+            z-index: 1;
+            min-width: 0;
+            display: block;
+            pointer-events: none;
+            /* the backing store is half this; the upscale is invisible on
+               low-frequency noise and costs a quarter of the fill.
+               Sizing lives in the breakpoints below, never here: this rule
+               sits after the shared desktop block in the sheet, so a width
+               declared at this level silently wins over it. */
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .hero-fx { opacity: 0.55; }
+        }
+
+        /* -- responsive ---------------------------------------------
+           Three states, not two. Below 1024 the artwork used to sit in
+           its own grid row, which read as a detached block with a hard
+           seam across it -- the exact opposite of the single
+           composition the desktop layout builds.
+           ---------------------------------------------------------- */
+
+        /* Tablet landscape and small laptops: the split still works, but
+           at 1024 the 42rem copy column and the artwork overlap, so both
+           give ground. */
+        @media (min-width: 1280px) {
+            .hero-fx {
+                justify-self: end;
+                align-self: start;
+                width: min(58vw, 62rem);
+                height: 100%;
+            }
+        }
+
+        @media (min-width: 1024px) and (max-width: 1279px) {
+            .hero-copy { max-width: 34rem; }
+            .hero-sub { max-width: 30rem; }
+            .hero-visual { width: min(52vw, 40rem); }
+            .hero-fx {
+                justify-self: end;
+                align-self: start;
+                width: min(50vw, 38rem);
+                height: 100%;
+            }
+        }
+
+        /* Phone and tablet portrait: one composition. The artwork covers
+           the whole hero, anchored to the top right and bleeding off both
+           edges, and dissolves toward the lower left where the copy sits.
+           No second row, no seam, nothing that looks bolted on. */
+        @media (max-width: 1023px) {
+            .hero {
+                grid-template-rows: 1fr;
+                align-content: stretch;
+                padding-block: 7rem 4rem;
+                min-height: 100svh;
+            }
+
+            .hero-inner { grid-area: 1 / 1; align-self: end; padding-block-end: 2rem; }
+
+            .hero-visual,
+            .hero-fx {
+                grid-area: 1 / 1;
+                justify-self: end;
+                align-self: start;
+                width: 128%;
+                height: 74%;
+                margin-top: -3%;
+                margin-right: -16%;
+            }
+
+            .hero-visual {
+                background-position: 64% 24%;
+                /* Two ramps, one per axis: the artwork has to disappear
+                   under the headline, not stop at a line. */
+                -webkit-mask-image:
+                    linear-gradient(to bottom, #000 0%, #000 44%, rgba(0, 0, 0, 0.35) 68%, transparent 88%),
+                    linear-gradient(to left, #000 0%, #000 46%, rgba(0, 0, 0, 0.3) 76%, transparent 96%);
+                -webkit-mask-composite: source-in;
+                        mask-image:
+                    linear-gradient(to bottom, #000 0%, #000 44%, rgba(0, 0, 0, 0.35) 68%, transparent 88%),
+                    linear-gradient(to left, #000 0%, #000 46%, rgba(0, 0, 0, 0.3) 76%, transparent 96%);
+                        mask-composite: intersect;
+                opacity: 1;
+            }
+
+            /* Safari before 15.4 and anything without mask-composite gets a
+               single ramp rather than an un-masked rectangle. */
+            @supports not ((mask-composite: intersect) or (-webkit-mask-composite: source-in)) {
+                .hero-visual {
+                    -webkit-mask-image: linear-gradient(200deg, #000 0%, #000 40%, transparent 82%);
+                            mask-image: linear-gradient(200deg, #000 0%, #000 40%, transparent 82%);
+                }
+            }
+
+            /* A scrim under the copy only, so the headline keeps its
+               contrast over the render without dimming the artwork. */
+            .hero-inner::before {
+                content: "";
+                position: absolute;
+                inset: -8% -12% -8% -50%;
+                z-index: -1;
+                pointer-events: none;
+                background: radial-gradient(130% 78% at 18% 72%,
+                    var(--color-bg) 0%,
+                    color-mix(in srgb, var(--color-bg) 90%, transparent) 46%,
+                    transparent 82%);
+            }
+
+            @supports not (background: color-mix(in srgb, red 50%, transparent)) {
+                .hero-inner::before {
+                    background: radial-gradient(120% 90% at 12% 45%,
+                        var(--color-bg) 0%, var(--color-bg) 38%, transparent 78%);
+                    opacity: 0.92;
+                }
+            }
+
+            .hero-copy { max-width: 30rem; }
+            .hero-sub { max-width: 26rem; }
+            .hero-scroll { display: none; }
+        }
+
+        @media (max-width: 600px) {
+            .hero-visual,
+            .hero-fx {
+                width: 152%;
+                height: 66%;
+                margin-right: -34%;
+            }
+        }
+
+        /* -- theme transition ---------------------------------------
+           A circular wipe from the button that was pressed, driven by
+           the View Transition API. The default root cross-fade is
+           switched off so the two snapshots do not double up with the
+           clip; the old snapshot simply sits underneath while the new
+           one is revealed.
+           ---------------------------------------------------------- */
+        ::view-transition-old(root),
+        ::view-transition-new(root) {
+            animation: none;
+            mix-blend-mode: normal;
+        }
+
+        ::view-transition-old(root) { z-index: 1; }
+        ::view-transition-new(root) { z-index: 2; }
+
+        /* Colour transitions fight the wipe: during the swap the snapshot
+           would keep interpolating its own background. Freeze them. */
+        html.theme-swapping *,
+        html.theme-swapping *::before,
+        html.theme-swapping *::after {
+            transition: none !important;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            ::view-transition-group(*),
+            ::view-transition-old(root),
+            ::view-transition-new(root) { animation: none !important; }
+        }
     </style>
 </head>
 
@@ -526,7 +1026,7 @@
                 NEXUS
             </a>
 
-            <div class="hidden md:flex gap-8 items-center font-medium text-sm tracking-wide">
+            <div class="hidden lg:flex gap-8 items-center font-medium text-sm tracking-wide">
                 <a href="#services" class="nav-link hover:text-brand-accent transition-colors" data-cursor-hover>Servicios</a>
                 <a href="#metodologia" class="nav-link hover:text-brand-accent transition-colors" data-cursor-hover>Metodología</a>
                 <a href="#work" class="nav-link hover:text-brand-accent transition-colors" data-cursor-hover>Trabajo</a>
@@ -543,7 +1043,7 @@
                 <a href="#contact" class="px-5 py-2.5 rounded-full border border-white/20 hover:border-brand-accent hover:bg-brand-accent transition-all duration-300" data-cursor-hover>Hablemos</a>
             </div>
 
-            <div class="md:hidden flex items-center gap-1 z-50">
+            <div class="lg:hidden flex items-center gap-1 z-50">
                 <button id="theme-toggle-mobile"
                         type="button"
                         class="theme-toggle"
@@ -581,52 +1081,71 @@
     <main id="main">
 
         <!-- ============================================================
-             Hero
+             Hero v4 — split editorial composition.
+
+             Left column is type, right column is a pre-rendered raster
+             artwork that bleeds off the viewport edge. The artwork is NOT
+             a live WebGL scene: the glass refraction, volumetric smoke and
+             depth of field in it are offline-render features whose
+             real-time equivalents cost far more than the result is worth,
+             and the previous canvas + <video> pair competed with each
+             other for the same box. Integration is a horizontal
+             mask-image fade, so the baked background dissolves into the
+             page with no visible rectangle.
+
+             The artwork is painted as a CSS background rather than an
+             <img> so that only the variant matching the active theme is
+             ever fetched; the <link rel="preload"> injected in <head>
+             restores the priority an <img fetchpriority="high"> would
+             have had.
              ============================================================ -->
-        <section class="relative min-h-screen flex items-center justify-center pt-20 overflow-hidden" aria-labelledby="hero-title">
-            <div class="absolute top-1/4 -left-32 w-96 h-96 bg-brand-accent rounded-full blur-[120px] pointer-events-none hero-orb" style="opacity: var(--hero-orb-opacity);" aria-hidden="true"></div>
-            <div class="absolute bottom-1/4 -right-32 w-96 h-96 bg-brand-accent2 rounded-full blur-[120px] pointer-events-none hero-orb" style="opacity: var(--hero-orb-opacity);" aria-hidden="true"></div>
+        <section id="hero" class="hero" aria-labelledby="hero-title">
+            <div class="hero-inner">
+                <div class="hero-copy">
+                    <div class="hero-badge-wrap">
+                        <span class="hero-badge">Agencia Digital Global · Lima, Perú</span>
+                    </div>
 
-            <div class="max-w-7xl mx-auto px-6 lg:px-12 w-full relative z-10 flex flex-col items-center text-center">
-                <div class="overflow-hidden mb-6">
-                    <span class="gsap-hero-badge inline-block py-1.5 px-4 rounded-full border border-white/10 bg-white/5 text-sm font-medium tracking-widest uppercase text-brand-accent backdrop-blur-sm">
-                        Agencia Digital Global · Lima, Perú
-                    </span>
-                </div>
+                    <h1 id="hero-title" class="hero-title">
+                        <span class="hero-line-mask"><span class="hero-line">Diseñamos el</span></span>
+                        <span class="hero-line-mask"><span class="hero-line hero-outline" data-cursor-hover>Futuro digital</span></span>
+                    </h1>
 
-                <h1 id="hero-title" class="gsap-hero-text text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-display font-bold uppercase leading-[1.05] tracking-tighter mb-8 w-full">
-                    <span class="block">Diseñamos el</span>
-                    <span class="block text-stroke" data-cursor-hover>futuro digital</span>
-                </h1>
+                    <p class="hero-sub">
+                        Transformamos ideas audaces en experiencias digitales excepcionales.
+                        Estrategia, branding y desarrollo web al más alto nivel.
+                    </p>
 
-                <p class="gsap-hero-sub max-w-2xl text-lg md:text-xl text-brand-muted font-light mb-12">
-                    Transformamos ideas audaces en experiencias digitales excepcionales. Estrategia, branding y desarrollo web al más alto nivel.
-                </p>
-
-                <div class="gsap-hero-btn flex flex-col sm:flex-row gap-4 items-center justify-center w-fit mx-auto">
-                    <a href="#work" class="group relative px-8 py-4 btn-inverse rounded-full font-semibold overflow-hidden transition-transform duration-300 hover:scale-105" data-cursor-hover>
-                        <span class="relative z-10 flex items-center gap-2 transition-colors duration-300 group-hover:text-white">
-                            Ver Proyectos <i class="ph ph-arrow-right group-hover:translate-x-1 transition-transform" aria-hidden="true"></i>
-                        </span>
-                        <div class="absolute inset-0 bg-brand-accent translate-y-[100%] group-hover:translate-y-0 transition-transform duration-300 ease-out z-0" aria-hidden="true"></div>
-                    </a>
-
-                    <a href="#services" class="px-8 py-4 rounded-full font-medium text-brand-muted hover:text-brand-text transition-colors duration-200 flex items-center gap-2" data-cursor-hover>
-                        Nuestros servicios
-                    </a>
-
-                    <a href="#metodologia" class="gsap-hero-btn-process px-6 py-4 rounded-full font-medium text-brand-muted hover:text-brand-text transition-colors duration-200 flex items-center gap-2 group" data-cursor-hover>
-                        <span class="w-9 h-9 rounded-full border border-white/30 group-hover:border-brand-accent group-hover:bg-brand-accent/10 flex items-center justify-center transition-all duration-300">
-                            <i class="ph-fill ph-arrow-down text-sm group-hover:text-brand-accent transition-colors duration-300" aria-hidden="true"></i>
-                        </span>
-                        Ver proceso
-                    </a>
+                    <div class="hero-cta">
+                        <a href="#work" class="hero-cta-primary" data-cursor-hover>
+                            <span>Ver Proyectos</span>
+                            <i class="ph ph-arrow-right" aria-hidden="true"></i>
+                        </a>
+                        <a href="#services" class="hero-cta-text" data-cursor-hover>Nuestros servicios</a>
+                        <a href="#metodologia" class="hero-cta-circle" data-cursor-hover>
+                            <span class="hero-cta-circle-ring" aria-hidden="true"><i class="ph ph-arrow-down"></i></span>
+                            Ver proceso
+                        </a>
+                    </div>
                 </div>
             </div>
 
-            <a href="#impacto" class="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-3 opacity-60 hover:opacity-100 transition-opacity" aria-label="Bajar a la siguiente sección" data-cursor-hover>
-                <span class="text-xs uppercase tracking-[0.3em]">Scroll</span>
-                <span class="w-[1px] h-14 block scroll-indicator-line" aria-hidden="true"></span>
+            <div class="hero-visual" aria-hidden="true"></div>
+
+            <!-- Fog and ribbon flow, generated on the GPU. Drifting PNG
+                 layers were tried first and read as pictures sliding: their
+                 edges swept in and out of frame. Fog has no edges, so it is
+                 noise, not a texture. Falls back to the still artwork alone
+                 when WebGL is unavailable. -->
+            <canvas class="hero-fx" aria-hidden="true"
+                                        data-mask-light="images/hero-cluster-mask-light-512.webp"
+                    data-mask-dark="images/hero-cluster-mask-dark-512.webp"></canvas>
+
+            <div class="hero-bands" aria-hidden="true"></div>
+
+            <a href="#impacto" class="hero-scroll" aria-label="Bajar a la siguiente sección" data-cursor-hover>
+                <span>Scroll</span>
+                <span class="hero-scroll-line" aria-hidden="true"></span>
             </a>
         </section>
 
@@ -1260,11 +1779,594 @@
                 try { localStorage.setItem(THEME_KEY, next); } catch (e) { /* blocked */ }
             }
         }
+        // Circular wipe from the button that was pressed. startViewTransition
+        // snapshots the page before and after, so the artwork, the fog and
+        // every colour token cross over inside one clip instead of each
+        // transitioning on its own clock. Unsupported browsers and reduced
+        // motion fall through to the plain swap.
+        // A circle growing is a wipe. To read as morphing, the boundary has to
+        // change SHAPE while it grows, so the reveal is a 96-point polygon
+        // whose radius is modulated by a few summed sines. The phases drift
+        // between keyframes, which is what makes the edge crawl; the wobble
+        // amplitude decays to zero so the last keyframe is a clean circle and
+        // nothing is left cropped. clip-path polygons interpolate point by
+        // point, so every keyframe needs the same point count.
+        const MORPH_POINTS = 96;
+
+        function morphBlob(cx, cy, radius, phase, wobble) {
+            let d = '';
+            for (let i = 0; i < MORPH_POINTS; i++) {
+                const a = (i / MORPH_POINTS) * Math.PI * 2;
+                const w = 1 + wobble * (
+                    Math.sin(a * 3 + phase) * 0.42 +
+                    Math.sin(a * 5 - phase * 1.6) * 0.26 +
+                    Math.sin(a * 2 + phase * 0.7) * 0.2 +
+                    Math.sin(a * 8 + phase * 2.3) * 0.12
+                );
+                const r = radius * w;
+                d += (i ? ',' : '') +
+                     (cx + Math.cos(a) * r).toFixed(1) + 'px ' +
+                     (cy + Math.sin(a) * r).toFixed(1) + 'px';
+            }
+            return 'polygon(' + d + ')';
+        }
+
+        let themeSwapping = false;
+
+        function swapTheme(next, originEl) {
+            const root = document.documentElement;
+            const apply = () => setTheme(next, true);
+
+            // A second click while the wipe is running starts a competing
+            // transition that cancels the first and orphans its cleanup.
+            if (themeSwapping) return;
+
+            if (typeof document.startViewTransition !== 'function' || reduceMotion) {
+                apply();
+                return;
+            }
+
+            const b = originEl ? originEl.getBoundingClientRect() : null;
+            const x = b ? b.left + b.width / 2 : window.innerWidth / 2;
+            const y = b ? b.top + b.height / 2 : 0;
+            // radius that still reaches the farthest corner from the origin,
+            // with headroom for the wobble so the blob never crops
+            const r = Math.hypot(Math.max(x, window.innerWidth - x),
+                                 Math.max(y, window.innerHeight - y)) * 1.35;
+
+            themeSwapping = true;
+            root.classList.add('theme-swapping');
+            const done = () => {
+                themeSwapping = false;
+                root.classList.remove('theme-swapping');
+            };
+            const vt = document.startViewTransition(apply);
+
+            vt.ready.then(() => {
+                root.animate(
+                    {
+                        clipPath: [
+                            morphBlob(x, y, r * 0.02, 0.0, 1.0),
+                            morphBlob(x, y, r * 0.22, 1.5, 0.85),
+                            morphBlob(x, y, r * 0.52, 3.1, 0.5),
+                            morphBlob(x, y, r * 0.8, 4.6, 0.24),
+                            morphBlob(x, y, r, 6.0, 0.0)
+                        ]
+                    },
+                    { duration: 900, easing: 'cubic-bezier(0.34, 0.9, 0.28, 1)',
+                      pseudoElement: '::view-transition-new(root)' }
+                );
+            }).catch(() => { /* transition skipped; the swap already happened */ });
+
+            // then(done, done) rather than finally(): a rejected or skipped
+            // transition still has to release the freeze. The timeout is the
+            // last line of defence -- if the class ever sticks, every
+            // transition on the page dies with it.
+            vt.finished.then(done, done);
+            setTimeout(done, 1800);
+        }
+
         themeButtons.forEach(btn => {
             btn.addEventListener('click', () => {
-                setTheme(currentTheme() === 'light' ? 'dark' : 'light', true);
+                swapTheme(currentTheme() === 'light' ? 'dark' : 'light', btn);
             });
         });
+
+
+        // ====================================================================
+        // Hero atmosphere — procedural, on the GPU
+        // ====================================================================
+        // The previous version drifted and rotated PNG layers. That reads as
+        // exactly what it is: a picture moving, whose edges sweep in and out
+        // of frame and make the whole thing look like it restarts. Fog has no
+        // edges and never repeats, so it has to be generated, not translated.
+        //
+        // This draws domain-warped fBm noise for the fog and samples the
+        // ribbon texture through a flowing displacement field, so the silk
+        // undulates in place instead of sliding across the screen. Alpha is
+        // computed in the shader, which also means the fade toward the copy
+        // column is part of the image and there is no rectangle to hide.
+        //
+        // Rendered at half resolution: fog is low-frequency by nature and the
+        // upscale is invisible, while the fill cost drops to a quarter.
+        (function heroFx() {
+            'use strict';
+
+            const canvas = document.querySelector('.hero-fx');
+            if (!canvas) return;
+
+            const gl = canvas.getContext('webgl', {
+                alpha: true, premultipliedAlpha: false, antialias: false,
+                depth: false, stencil: false, powerPreference: 'low-power'
+            });
+            // No WebGL: the still artwork alone is a perfectly good hero.
+            if (!gl) { canvas.remove(); return; }
+
+            const VERT = [
+                'attribute vec2 aPos;',
+                'varying vec2 vUv;',
+                'void main() {',
+                '  vUv = aPos * 0.5 + 0.5;',
+                '  gl_Position = vec4(aPos, 0.0, 1.0);',
+                '}'
+            ].join('\n');
+
+            const FRAG = [
+                'precision highp float;',
+                'varying vec2 vUv;',
+                'uniform float uTime;',
+                'uniform vec2  uRes;',
+                'uniform float uDark;',
+                'uniform float uAmount;',
+                'uniform float uLod;',
+                'uniform sampler2D uNoise;',
+                'uniform sampler2D uMask;',
+                '',
+                // One bilinear fetch per octave instead of four sin() calls.
+                // uNoise is a 256x256 tile of random bytes generated once at
+                // startup; LINEAR filtering turns it into value noise for free.
+                'float noise(vec2 p) { return texture2D(uNoise, p * 0.00390625).r; }',
+                '',
+                'float fbm(vec2 p) {',
+                '  float v = 0.0;',
+                '  v += 0.5000 * noise(p);',
+                '  v += 0.2500 * noise(p * 2.03 + 17.3);',
+                '  v += 0.1000 * noise(p * 3.05 + 41.7);',
+                '  return v * 1.1765;',
+                '}',
+                '',
+                // A single warp level. The second one cost four more fbm calls
+                // and, at this opacity, was not visible in the result.
+                'float clouds(vec2 uv, float t) {',
+                '  vec2 q = vec2(fbm(uv + vec2(0.0, t * 3.2)),',
+                '                fbm(uv + vec2(93.0, 21.0) - t * 2.6));',
+                '  return fbm(uv + 62.0 * q);',
+                '}',
+                '',
+                // ---- Light ribbons, drawn rather than sampled ----------
+                // A ribbon is the set of points near a curve. Distance to
+                // that curve gives a hot core and a wide bloom in one
+                // expression, which is exactly how a light trail reads, and
+                // unlike a texture it is resolution-independent and it can
+                // actually move: the curve itself is warped by time.
+                //
+                // Returns (core, bloom) so the caller can shade the white
+                // centre and the magenta halo separately -- a single falloff
+                // gives a flat neon tube, not silk catching light.
+                'vec2 ribbon(vec2 uv, float phase, float amp, float freq, float thick, float t) {',
+                '  float y = 0.5',
+                '    + amp * sin(uv.x * freq + phase + t * 0.33)',
+                '    + amp * 0.42 * sin(uv.x * freq * 1.87 - phase * 1.4 + t * 0.21)',
+                '    + amp * 0.18 * sin(uv.x * freq * 3.10 + phase * 0.7 - t * 0.47)',
+                // No noise in the PATH. Bilinear value noise is piecewise
+                // linear, so its kinks are invisible as a density and read as
+                // a zigzag polyline the moment it drives a position. Four
+                // sines at irrational frequency ratios never repeat either,
+                // and they stay smooth.
+                '    + amp * 0.11 * sin(uv.x * freq * 0.61 - phase * 2.1 + t * 0.13);',
+                '  float d = abs(uv.y - y);',
+                // The band narrows toward both ends so it tapers off instead
+                // of being sliced by the edge of the canvas.
+                '  float taper = smoothstep(0.0, 0.26, uv.x) * smoothstep(1.0, 0.72, uv.x);',
+                // Silk is not a wire: the band has to be wide enough to hold a
+                // gradient, and its width breathes along its length so it
+                // reads as a twisting strip rather than a tube.
+                '  float breathe = 0.62 + 0.38 * sin(uv.x * freq * 0.77 + phase + t * 0.29);',
+                '  float w = thick * (0.30 + 0.70 * taper) * breathe;',
+                '  float core = smoothstep(w, w * 0.15, d);',
+                '  float bloom = smoothstep(w * 6.5, 0.0, d);',
+                '  return vec2(core, bloom) * taper;',
+                '}',
+                '',
+                'void main() {',
+                '  vec2 uv = vUv;',
+                '  float asp = uRes.x / max(uRes.y, 1.0);',
+                '  vec2 p = vec2(uv.x * asp, uv.y) * 64.0;',
+                '  float t = uTime;',
+                '',
+                '  float f = clouds(p, t);',
+                '  float f2 = fbm(p * 1.9 + vec2(311.0, 127.0) + vec2(t * 4.0, -t * 3.1));',
+                '',
+                // Two colour fields: carmine low and right, cyan high and right,
+                // matching where the baked artwork already puts them.
+                '  vec3 warm = uDark > 0.5 ? vec3(0.98, 0.16, 0.52) : vec3(0.62, 0.06, 0.24);',
+                '  vec3 cool = uDark > 0.5 ? vec3(0.22, 0.85, 0.92) : vec3(0.06, 0.42, 0.48);',
+                '  float warmField = smoothstep(0.15, 0.95, (1.0 - uv.y) * 0.75 + uv.x * 0.45);',
+                '  float coolField = smoothstep(0.35, 1.0, uv.y * 0.8 + uv.x * 0.5);',
+                '  vec3 fogCol = mix(cool, warm, clamp(warmField - coolField * 0.75 + 0.35, 0.0, 1.0));',
+                '',
+                '  float haze = smoothstep(0.40, 0.84, f * 0.74 + f2 * 0.36);',
+                '',
+                // Light shafts. A source parked just off the top-right corner,
+                // rays striated by noise around its angle so they read as
+                // beams through atmosphere rather than a gradient. Time is
+                // inside the striation, so the shafts sweep and breathe.
+                '  vec2 lightPos = vec2(1.02, 1.16);',
+                '  vec2 toLight = uv - lightPos;',
+                '  float lDist = length(toLight);',
+                '  float lAng = atan(toLight.y, toLight.x);',
+                '  float rays = 0.0;',
+                '  if (uLod > 0.5) {',
+                '    float rn = fbm(vec2(lAng * 32.0, t * 1.7 + 60.0));',
+                '    float rs = smoothstep(0.34, 0.86, rn); rays = rs * sqrt(rs);',
+                '  }',
+                // Fade in from the source rather than out of it: a shaft is
+                // brightest a little way along its length, not at the lamp.
+                '  float lNear = smoothstep(0.05, 0.42, lDist);',
+                '  float lFar = smoothstep(1.55, 0.35, lDist);',
+                '  float shafts = rays * lNear * lFar;',
+                // Beams only show where there is something for them to pass
+                // through, so the atmosphere modulates them.
+                '  shafts *= 0.35 + 0.85 * haze;',
+                '',
+                // Procedural volume. Three fields at deliberately low
+                // frequency: a domain-warped body, a slower swell that makes
+                // it breathe, and one finer band for the tendril edges. The
+                // highest octave stays under one noise tile across the whole
+                // buffer, so there is no minification and nothing curdles.
+                '  float body = clouds(p * 0.62, t * 1.15);',
+                '  float swell = fbm(p * 0.34 + vec2(t * 1.3, -t * 1.05) + 210.0);',
+                '  float tendril = fbm(p * 1.30 + vec2(-t * 2.0, t * 1.6) + 77.0);',
+                '',
+                '  float vol = body * 0.66 + swell * 0.32 + tendril * 0.16;',
+                // Two thresholds: the outer one feathers the edge of the
+                // volume, the inner one gives it a dense heart. A single
+                // smoothstep produces flat haze.
+                '  float dens = smoothstep(0.35, 0.82, vol);',
+                '  dens = dens * (0.55 + 0.75 * smoothstep(0.38, 0.86, vol));',
+                '',
+                // Colour follows position, not density, so the volume keeps a
+                // consistent palette as it moves through the frame.
+                '  float lowRight = smoothstep(0.10, 0.98, (1.0 - uv.y) * 0.72 + uv.x * 0.52);',
+                '  float topRight = smoothstep(0.42, 1.05, uv.y * 0.86 + uv.x * 0.44);',
+                '  vec3 warmC = uDark > 0.5 ? vec3(1.0, 0.13, 0.44) : vec3(0.72, 0.05, 0.26);',
+                '  vec3 coolC = uDark > 0.5 ? vec3(0.16, 0.82, 0.92) : vec3(0.10, 0.44, 0.52);',
+                '  vec3 volCol = mix(coolC, warmC, clamp(lowRight - topRight * 0.85 + 0.30, 0.0, 1.0));',
+                '  float smokeA = clamp(dens, 0.0, 1.0);',
+                '',
+                // 1 where the render is empty ground. The canvas paints over
+                // the artwork, so a ribbon multiplied by this vanishes exactly
+                // where the cubes are -- which reads as passing behind them.
+                '  float ground = texture2D(uMask, vec2(uv.x, 1.0 - uv.y)).r;',
+                '',
+                '  vec2 rA = ribbon(uv, 0.0, 0.132, 5.6, 0.026, t);',
+                '  vec2 rB = ribbon(uv, 2.35, 0.168, 4.1, 0.034, t);',
+                '  vec2 rC = uLod > 0.5 ? ribbon(uv, 4.90, 0.098, 7.4, 0.019, t) : vec2(0.0);',
+                '',
+                // rB and rC weave behind; rA sweeps across the front
+                '  float coreF = rA.x;',
+                '  float bloomF = rA.y;',
+                '  float coreB = (rB.x + rC.x) * ground;',
+                '  float bloomB = (rB.y + rC.y) * ground;',
+                '  float rCore = clamp(coreF + coreB, 0.0, 1.0);',
+                '  float rBloom = clamp(bloomF + bloomB, 0.0, 1.0);',
+                '',
+                // A single falloff gives a flat neon tube. The white centre and
+                // the saturated halo have to be shaded separately for it to
+                // read as silk catching light.
+                '  vec3 coreCol = uDark > 0.5 ? vec3(1.0) : vec3(1.0, 0.88, 0.94);',
+                '  vec3 bloomCol = uDark > 0.5 ? vec3(1.0, 0.26, 0.66) : vec3(0.80, 0.06, 0.36);',
+                '',
+                // Everything fades toward the copy column and off the far
+                // edges, in the shader, so the layer has no rectangle at all.
+                '  float edge = smoothstep(0.0, 0.42, uv.x)',
+                '             * smoothstep(0.0, 0.14, uv.y)',
+                '             * smoothstep(0.0, 0.12, 1.0 - uv.y);',
+                '',
+                '  float fogA = haze * (uDark > 0.5 ? 0.2 : 0.14);',
+                '  vec3 col = fogCol;',
+                '  float a = fogA;',
+                '',
+                '  float sA = smokeA * (uDark > 0.5 ? 0.9 : 0.58);',
+                '  col = mix(col, volCol, sA / max(a + sA, 0.001));',
+                '  a = a + sA * (1.0 - a);',
+                '  float bA = rBloom * (uDark > 0.5 ? 0.62 : 0.66);',
+                '  col = mix(col, bloomCol, bA / max(a + bA, 0.001));',
+                '  a = a + bA * (1.0 - a);',
+                '  float cA = rCore * (uDark > 0.5 ? 0.96 : 0.88);',
+                '  col = mix(col, coreCol, cA / max(a + cA, 0.001));',
+                '  a = a + cA * (1.0 - a);',
+                '',
+                '',
+                '  vec3 beamCol = uDark > 0.5 ? vec3(1.0, 0.93, 0.98) : vec3(0.86, 0.42, 0.6);',
+                '  float beamA = shafts * (uDark > 0.5 ? 0.5 : 0.3);',
+                '  col = mix(col, beamCol, beamA / max(a + beamA, 0.001));',
+                '  a = a + beamA * (1.0 - a);',
+                '',
+                '  gl_FragColor = vec4(col, a * edge * uAmount);',
+                '}'
+            ].join('\n');
+
+            function compile(type, src) {
+                const sh = gl.createShader(type);
+                gl.shaderSource(sh, src);
+                gl.compileShader(sh);
+                if (!gl.getShaderParameter(sh, gl.COMPILE_STATUS)) {
+                    console.warn('[hero-fx]', gl.getShaderInfoLog(sh));
+                    return null;
+                }
+                return sh;
+            }
+
+            const vs = compile(gl.VERTEX_SHADER, VERT);
+            const fs = compile(gl.FRAGMENT_SHADER, FRAG);
+            if (!vs || !fs) { canvas.remove(); return; }
+
+            const prog = gl.createProgram();
+            gl.attachShader(prog, vs);
+            gl.attachShader(prog, fs);
+            gl.linkProgram(prog);
+            if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) { canvas.remove(); return; }
+            gl.useProgram(prog);
+
+            const buf = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+            const aPos = gl.getAttribLocation(prog, 'aPos');
+            gl.enableVertexAttribArray(aPos);
+            gl.vertexAttribPointer(aPos, 2, gl.FLOAT, false, 0, 0);
+
+            const uTime = gl.getUniformLocation(prog, 'uTime');
+            const uRes = gl.getUniformLocation(prog, 'uRes');
+            const uDark = gl.getUniformLocation(prog, 'uDark');
+            const uAmount = gl.getUniformLocation(prog, 'uAmount');
+            const uLod = gl.getUniformLocation(prog, 'uLod');
+            const uNoise = gl.getUniformLocation(prog, 'uNoise');
+            const uMask = gl.getUniformLocation(prog, 'uMask');
+
+            // 256x256 of random bytes, wrapped and linearly filtered: that is
+            // all a value-noise basis needs to be.
+            const NOISE_N = 256;
+
+            // Bilinear interpolation of INDEPENDENT random texels is not a
+            // smooth field: its derivative jumps at every texel edge, and
+            // those kinks are precisely the cottage-cheese cells the fog was
+            // showing. Blurring the field first removes the high frequency
+            // that the interpolation cannot represent, and the contrast is
+            // restored afterwards because blurring collapses the range.
+            function smoothField(n, passes) {
+                let a = new Float32Array(n * n);
+                for (let i = 0; i < a.length; i++) a[i] = Math.random();
+                const b = new Float32Array(n * n);
+                for (let pass = 0; pass < passes; pass++) {
+                    for (let y = 0; y < n; y++) {
+                        for (let x = 0; x < n; x++) {
+                            let sum = 0;
+                            for (let dy = -1; dy <= 1; dy++) {
+                                const yy = ((y + dy) % n + n) % n;
+                                for (let dx = -1; dx <= 1; dx++) {
+                                    sum += a[yy * n + (((x + dx) % n + n) % n)];
+                                }
+                            }
+                            b[y * n + x] = sum / 9;
+                        }
+                    }
+                    a.set(b);
+                }
+                let mn = Infinity, mx = -Infinity;
+                for (let i = 0; i < a.length; i++) {
+                    if (a[i] < mn) mn = a[i];
+                    if (a[i] > mx) mx = a[i];
+                }
+                const k = 1 / Math.max(mx - mn, 1e-6);
+                for (let i = 0; i < a.length; i++) a[i] = (a[i] - mn) * k;
+                return a;
+            }
+
+            const fieldR = smoothField(NOISE_N, 4);
+            const fieldG = smoothField(NOISE_N, 4);
+            const fieldB = smoothField(NOISE_N, 4);
+            const noiseData = new Uint8Array(NOISE_N * NOISE_N * 4);
+            for (let i = 0, j = 0; i < noiseData.length; i += 4, j++) {
+                noiseData[i] = fieldR[j] * 255;
+                noiseData[i + 1] = fieldG[j] * 255;
+                noiseData[i + 2] = fieldB[j] * 255;
+                noiseData[i + 3] = 255;
+            }
+            const noiseTex = gl.createTexture();
+            gl.activeTexture(gl.TEXTURE1);
+            gl.bindTexture(gl.TEXTURE_2D, noiseTex);
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, NOISE_N, NOISE_N, 0,
+                          gl.RGBA, gl.UNSIGNED_BYTE, noiseData);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
+            // Without mipmaps the highest octave minifies about 3x and
+            // aliases into per-pixel speckle, which the half-resolution
+            // upscale then magnifies into visible grain.
+            gl.generateMipmap(gl.TEXTURE_2D);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+            gl.uniform1i(uNoise, 1);
+            gl.activeTexture(gl.TEXTURE0);
+
+            // Both sampled textures share the same setup; only the unit and
+            // the source differ.
+            function loadTexture(unit, url, onReady) {
+                const t = gl.createTexture();
+                gl.activeTexture(gl.TEXTURE0 + unit);
+                gl.bindTexture(gl.TEXTURE_2D, t);
+                gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE,
+                              new Uint8Array([0, 0, 0, 0]));
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+                const im = new Image();
+                im.decoding = 'async';
+                im.onload = () => {
+                    gl.activeTexture(gl.TEXTURE0 + unit);
+                    gl.bindTexture(gl.TEXTURE_2D, t);
+                    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+                    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, im);
+                    // Both sources are power-of-two, so mipmaps are legal and
+                    // stop the minified samples from crawling.
+                    if ((im.width & (im.width - 1)) === 0 && (im.height & (im.height - 1)) === 0) {
+                        gl.generateMipmap(gl.TEXTURE_2D);
+                        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
+                    }
+                    if (onReady) onReady();
+                };
+                im.src = url;
+                return t;
+            }
+
+            const maskSrc = () => document.documentElement.classList.contains('light')
+                ? (canvas.dataset.maskLight || 'images/hero-cluster-mask-light-512.webp')
+                : (canvas.dataset.maskDark || 'images/hero-cluster-mask-dark-512.webp');
+
+            let maskTex = loadTexture(3, maskSrc());
+            gl.uniform1i(uMask, 3);
+            let smokeThemeIsLight = document.documentElement.classList.contains('light');
+
+            gl.enable(gl.BLEND);
+            gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+            gl.clearColor(0, 0, 0, 0);
+
+            // Half resolution, and never more backing store than the device
+            // would actually show.
+            // Fog is low frequency; a third of the linear resolution is
+            // indistinguishable and costs a ninth of the fill.
+            let scale = 0.36;
+            let w = 0, h = 0;
+            function resize() {
+                const r = canvas.getBoundingClientRect();
+                const nw = Math.max(2, Math.round(r.width * scale));
+                const nh = Math.max(2, Math.round(r.height * scale));
+                if (nw === w && nh === h) return;
+                w = nw; h = nh;
+                canvas.width = w; canvas.height = h;
+                gl.viewport(0, 0, w, h);
+                gl.uniform2f(uRes, w, h);
+            }
+
+            const reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
+            let raf = null, t0 = performance.now(), visible = true;
+
+            function isLight() { return document.documentElement.classList.contains('light'); }
+
+            const MIN_DT = 1000 / 30;   // fog gains nothing above 30fps
+            let last = 0;
+            let degrade = 0;
+            let prevDrawn = 0;
+            const samples = [];
+
+            function frame(now) {
+                if (now - last < MIN_DT) {
+                    raf = visible && !reduce.matches ? requestAnimationFrame(frame) : null;
+                    return;
+                }
+                last = now;
+                resize();
+                gl.uniform1f(uTime, (now - t0) * 0.001);
+                const lightNow = isLight();
+                gl.uniform1f(uDark, lightNow ? 0.0 : 1.0);
+                if (lightNow !== smokeThemeIsLight) {
+                    smokeThemeIsLight = lightNow;
+                    gl.deleteTexture(maskTex);
+                    maskTex = loadTexture(3, maskSrc());
+                    gl.uniform1i(uMask, 3);
+                    gl.activeTexture(gl.TEXTURE0);
+                }
+                gl.uniform1f(uAmount, 1.0);
+                gl.uniform1f(uLod, degrade >= 1 ? 0.0 : 1.0);
+                gl.clear(gl.COLOR_BUFFER_BIT);
+                gl.drawArrays(gl.TRIANGLES, 0, 3);
+
+                // Adaptive quality. Guessing which devices can afford this is
+                // a losing game, so measure instead: if drawn frames are
+                // consistently slow, halve the resolution once, and if that
+                // is still not enough stop the loop. The last frame stays on
+                // screen, so a slow device gets still fog rather than a
+                // stutter -- and never a blank rectangle.
+                // Sampling only starts once the entrance timeline is done.
+                // Measuring while the page is still laying out, decoding
+                // images and running the intro would condemn a perfectly
+                // capable machine on the strength of its busiest second.
+                if (degrade < 2 && prevDrawn && now - t0 > 2600) {
+                    // Interval between DRAWN frames, not time spent inside the
+                    // draw call: drawArrays returns before the GPU is done, so
+                    // wrapping it measures JS overhead and nothing else.
+                    samples.push(now - prevDrawn);
+                    if (samples.length >= 32) {
+                        samples.sort((a, b) => a - b);
+                        const median = samples[16];
+                        samples.length = 0;
+                        // 30fps target with generous slack. Below roughly
+                        // 16fps drifting fog reads as stutter, and a still
+                        // frame is the better picture.
+                        if (median > 60) {
+                            degrade++;
+                            if (degrade === 1) {
+                                // Drops the second smoke sample, the light
+                                // shafts and the third ribbon as well as the
+                                // resolution: a weak device keeps moving fog
+                                // instead of jumping straight to a frozen frame.
+                                scale = 0.22; w = h = 0;
+                                canvas.dataset.fx = 'reduced';
+                            } else {
+                                // Leave the last frame on screen: still fog
+                                // beats stuttering fog, and beats a hole.
+                                canvas.dataset.fx = 'static';
+                                stop();
+                                return;
+                            }
+                        } else {
+                            degrade = 2;   // fast enough; stop sampling
+                            canvas.dataset.fx = canvas.dataset.fx === 'reduced' ? 'reduced' : 'live';
+                        }
+                    }
+                }
+                prevDrawn = now;
+
+                raf = visible && !reduce.matches ? requestAnimationFrame(frame) : null;
+            }
+
+            function start() {
+                if (raf === null) raf = requestAnimationFrame(frame);
+            }
+            function stop() {
+                if (raf !== null) { cancelAnimationFrame(raf); raf = null; }
+            }
+
+            // Nothing below the fold needs to keep burning frames.
+            if ('IntersectionObserver' in window) {
+                new IntersectionObserver((entries) => {
+                    visible = entries[0].isIntersecting;
+                    visible ? start() : stop();
+                }, { threshold: 0.01 }).observe(canvas);
+            }
+            document.addEventListener('visibilitychange', () => {
+                document.hidden ? stop() : (visible && start());
+            });
+            reduce.addEventListener('change', () => { stop(); requestAnimationFrame(frame); });
+
+            canvas.addEventListener('webglcontextlost', (e) => { e.preventDefault(); stop(); });
+            canvas.addEventListener('webglcontextrestored', () => { w = h = 0; start(); });
+
+            canvas.dataset.fx = reduce.matches ? 'static' : 'live';
+            requestAnimationFrame(frame);
+            if (!reduce.matches) start();
+        })();
 
         // ---- Custom Cursor (skip if touch OR reduced motion) ---------------
         const cursor = document.getElementById('cursor');
@@ -1479,27 +2581,51 @@
                     });
                 }
 
-                // Hero timeline
-                // v3.2 fix: added `clearProps: 'all'` on each tween so GSAP
-                // removes the inline transform/opacity after the animation
-                // completes. Without this, a known GSAP quirk with
-                // `from()` + `stagger: 0.1` was leaving the first staggered
-                // child (.gsap-hero-btn > *:first-child → "Ver Proyectos")
-                // stuck at the FROM state (transform: translateY(24px)) even
-                // though opacity had animated to 1. That made "Ver Proyectos"
-                // sit visibly lower than the other two CTAs.
-                // v3.2.1 fix: removed `y: 24` from the .gsap-hero-btn > * tween.
-                // The `clearProps: 'all'` from v3.2 cleaned the residual transform
-                // AFTER the animation, but during the first ~300-500ms the first
-                // child ("Ver Proyectos") was still at y=24 (or partway) while
-                // the other two were at y=0, producing visible drift. With `y`
-                // gone, the three CTAs now fade in (with stagger) at their final
-                // vertical position and stay aligned from t=0.
-                const tl = gsap.timeline();
-                tl.from('.gsap-hero-badge',     { y: 24, opacity: 0, duration: 0.8, ease: 'power3.out', delay: 0.2, clearProps: 'all' })
-                  .from('.gsap-hero-text span', { y: 100, opacity: 0, duration: 1,   stagger: 0.15, ease: 'power4.out', clearProps: 'all' }, '-=0.6')
-                  .from('.gsap-hero-sub',       { y: 24, opacity: 0, duration: 0.8, ease: 'power3.out', clearProps: 'all' }, '-=0.4')
-                  .from('.gsap-hero-btn > *',   { opacity: 0, duration: 0.6, stagger: 0.08, ease: 'power3.out', clearProps: 'all' }, '-=0.6');
+                // ---- v4 Hero entrance -------------------------------
+                // Absolute positions instead of the previous '-=0.6'
+                // chain: with relative offsets, changing one duration
+                // cascades into everything after it.
+                // yPercent on the lines, not y:100 — the old absolute
+                // 100px was calibrated for the desktop size and threw the
+                // text three line-heights up once the title became a
+                // clamp().
+                // autoAlpha rather than opacity so GSAP also writes
+                // visibility:hidden and the hidden CTAs cannot take
+                // keyboard focus before they appear.
+                const tl = gsap.timeline({ defaults: { ease: 'power3.out' } });
+                tl.from('.hero-visual',  { autoAlpha: 0, scale: 1.06, xPercent: 4, duration: 1.4, ease: 'power2.out' }, 0)
+                  .from('.hero-badge',   { y: 20, autoAlpha: 0, duration: 0.7, clearProps: 'all' }, 0.15)
+                  .from('.hero-line',    { yPercent: 108, duration: 1.05, stagger: 0.12, ease: 'power4.out', clearProps: 'all' }, 0.25)
+                  .from('.hero-bands',   { autoAlpha: 0, duration: 1.2, ease: 'none' }, 0.4)
+                  .from('.hero-sub',     { y: 18, autoAlpha: 0, duration: 0.7, clearProps: 'all' }, 0.7)
+                  .from('.hero-cta > *', { autoAlpha: 0, duration: 0.55, stagger: 0.07, clearProps: 'all' }, 0.85)
+                  .from('.hero-scroll',  { autoAlpha: 0, y: 12, duration: 0.6, clearProps: 'all' }, 1.1);
+                // No clearProps on .hero-visual / .hero-bands: the cursor
+                // parallax below owns their transform from here on.
+
+                // ---- v4 Hero cursor parallax ------------------------
+                // quickTo reuses a single pre-instantiated tween. The
+                // previous camera parallax built and threw away a fresh
+                // gsap.to on every mousemove, ~120 per second.
+                // Amplitude stays under ~18px: past that the masked edge
+                // of the artwork walks into view at the corners, which is
+                // also why the entrance leaves scale(1.06) behind.
+                const heroVisualEl = document.querySelector('.hero-visual');
+                const heroBandsEl = document.querySelector('.hero-bands');
+                let onHeroPointerMove = null;
+                if (heroVisualEl && heroBandsEl && !isTouch) {
+                    const xTo = gsap.quickTo(heroVisualEl, 'x', { duration: 0.9, ease: 'power3.out' });
+                    const yTo = gsap.quickTo(heroVisualEl, 'y', { duration: 0.9, ease: 'power3.out' });
+                    const bxTo = gsap.quickTo(heroBandsEl, 'x', { duration: 1.2, ease: 'power3.out' });
+                    onHeroPointerMove = (e) => {
+                        const nx = (e.clientX / window.innerWidth - 0.5) * 2;
+                        const ny = (e.clientY / window.innerHeight - 0.5) * 2;
+                        xTo(nx * -14);
+                        yTo(ny * -9);
+                        bxTo(nx * 7);   // bands drift the other way, at half
+                    };
+                    window.addEventListener('mousemove', onHeroPointerMove, { passive: true });
+                }
 
                 // Generic fade-up on scroll
                 gsap.utils.toArray('.gsap-fade-up').forEach(el => {
@@ -1554,6 +2680,12 @@
                     if (lenis) {
                         lenis.destroy();
                         window.__lenis = null;
+                    }
+                    // v4: drop the hero cursor-parallax listener when the
+                    // matchMedia flips (reduced-motion toggle, viewport change).
+                    if (onHeroPointerMove) {
+                        window.removeEventListener('mousemove', onHeroPointerMove);
+                        onHeroPointerMove = null;
                     }
                     // ScrollTrigger cleans up automatically when the media query flips
                 };

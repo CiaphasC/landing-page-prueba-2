@@ -46,3 +46,34 @@ round2-block-*.js
 # Python caches
 __pycache__/
 *.pyc
+
+# Working backups of index.html kept on disk for comparison, not in the repo
+/index.html.bak-*
+
+# Diagnostic and generation scratch (re-created on demand)
+/diag-*
+/poll-*
+/submit-*
+/sample-*
+/query-*
+/generate-result.json
+/generate-video-args.json
+/generate-v3.8b-*.json
+/check-inline-scripts.cjs
+/optimize-hero.py
+/served-check.html
+/server-*.log
+
+# Verification screenshots
+/cta-after.png
+/dark-*.png
+/light-*.png
+/mobile-*.png
+/reduce-motion-*.png
+/verifier-*.png
+/verify-*.png
+/video-frame-*.png
+
+# Superseded hero motion source (the hero no longer plays a video)
+/images/hero-motion.*
+/images/src/hero-motion-*
