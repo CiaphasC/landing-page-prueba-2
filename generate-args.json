@@ -1,0 +1,40 @@
+{
+  "requests": [
+    {
+      "prompt": "Editorial beauty product photography for a premium cosmetics e-commerce website hero image. A single luxury skincare bottle with frosted glass body and brushed gold cap sits centered on a polished rose marble surface, surrounded by scattered fresh rose petals and soft pink bokeh circles. Studio lighting from the upper left creating soft shadows, subtle glass reflection, ultra-detailed, shallow depth of field, Vogue editorial aesthetic, sophisticated warm rose and champagne color palette, 8K product photography.",
+      "aspect_ratio": "4:3",
+      "resolution": "2K",
+      "output_file": "aura-cosmeticos.jpg"
+    },
+    {
+      "prompt": "Sleek fintech mobile app UI mockup displayed on a modern dark smartphone, shown at a slight 3/4 perspective angle floating on a dark charcoal background. Phone screen shows a clean financial dashboard with minimalist dark interface: account balance, spending chart in purple and electric blue gradient, transaction list. Dramatic rim lighting from the sides, premium product photography style, ultra-detailed, sophisticated fintech product shot, dark moody atmosphere, 8K.",
+      "aspect_ratio": "4:3",
+      "resolution": "2K",
+      "output_file": "nova-banking.jpg"
+    },
+    {
+      "prompt": "Visual identity and branding photography flat-lay on warm cream paper background. Carefully arranged: typography print samples with serif display fonts, a hand holding a fountain pen sketching a logo, color swatches in warm terracotta and sage green, a mood board with brand concept sketches, scattered Post-it notes with handwritten ideas. Soft natural daylight from a window casting gentle shadows, top-down view, lifestyle branding photography, warm and creative atmosphere, ultra-detailed, 8K editorial style.",
+      "aspect_ratio": "4:3",
+      "resolution": "2K",
+      "output_file": "helio-studios.jpg"
+    },
+    {
+      "prompt": "Professional corporate headshot portrait of a confident Latin American woman in her mid-30s, warm genuine smile, shoulder-length dark wavy hair, wearing an elegant cream blazer over a black top. Soft natural studio lighting with gentle key light from the left, neutral dark charcoal gradient background, eyes looking directly at the camera, contemporary executive portrait photography, shallow depth of field with creamy bokeh, ultra-detailed, 8K, approachable and trustworthy presence.",
+      "aspect_ratio": "1:1",
+      "resolution": "1K",
+      "output_file": "maria-lopez.jpg"
+    },
+    {
+      "prompt": "Professional corporate headshot portrait of a confident Latin American man in his mid-30s, friendly composed expression, short dark hair with subtle grey at the temples, well-groomed short beard, wearing a dark charcoal turtleneck sweater. Soft natural studio lighting with gentle key light from the right, neutral dark slate gradient background, eyes looking directly at the camera, contemporary tech executive portrait photography, shallow depth of field, ultra-detailed, 8K, modern and trustworthy presence.",
+      "aspect_ratio": "1:1",
+      "resolution": "1K",
+      "output_file": "andres-vega.jpg"
+    },
+    {
+      "prompt": "Professional creative headshot portrait of a Spanish woman in her late 30s, thoughtful slight smile, long auburn hair pulled back in a low bun, wearing a deep forest green linen blazer over a cream blouse. Soft natural studio lighting with gentle window light from the left, neutral dark charcoal gradient background, eyes looking directly at the camera with creative spark, contemporary creative-director portrait photography, shallow depth of field, ultra-detailed, 8K, artistic and warm presence.",
+      "aspect_ratio": "1:1",
+      "resolution": "1K",
+      "output_file": "lucia-fernandez.jpg"
+    }
+  ]
+}

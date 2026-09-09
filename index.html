@@ -1,0 +1,1689 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0a0a0a">
+    <title>NEXUS | Creative Agency — Estrategia, Branding y Desarrollo Digital</title>
+    <meta name="description" content="NEXUS es una agencia digital global en Lima, Perú. Diseñamos el futuro digital con estrategia, branding y desarrollo web de alto nivel para marcas audaces.">
+    <meta name="author" content="NEXUS Agency">
+    <meta name="robots" content="index, follow">
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="NEXUS Creative Agency">
+    <meta property="og:title" content="NEXUS | Creative Agency">
+    <meta property="og:description" content="Diseñamos el futuro digital con estrategia, branding y desarrollo web al más alto nivel.">
+    <meta property="og:locale" content="es_PE">
+    <meta property="og:url" content="https://nexus.agency/">
+    <meta property="og:image" content="images/aura-cosmeticos-1200.jpg">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="NEXUS Creative Agency — Obras destacadas">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="NEXUS | Creative Agency">
+    <meta name="twitter:description" content="Diseñamos el futuro digital con estrategia, branding y desarrollo web al más alto nivel.">
+    <meta name="twitter:image" content="images/aura-cosmeticos-1200.jpg">
+
+    <!-- Favicon: inline SVG with stylized "N" in #FF3366 -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230a0a0a'/%3E%3Cpath d='M7 24 V8 L17 20 V8 H25 V24 L15 12 V24 Z' fill='%23FF3366'/%3E%3C/svg%3E">
+
+    <!-- FOUC-prevention theme bootstrap (v3).
+         Runs synchronously BEFORE first paint.
+         Reads localStorage('nexus_theme') → falls back to prefers-color-scheme.
+         Sets <html class="light"> for light mode, plus meta theme-color. -->
+    <script>
+    (function () {
+        try {
+            var stored = localStorage.getItem('nexus_theme');
+            // Brand is dark-first. Cascade:
+            //   1. Stored choice (localStorage) always wins.
+            //   2. (prefers-color-scheme: no-preference) matches → 'dark' (brand default)
+            //      Spec-compliant browsers report this for users with no OS pref.
+            //   3. (prefers-color-scheme: dark)         matches → 'dark'
+            //   4. (prefers-color-scheme: light)        matches → 'light'
+            //   5. else                                 → 'dark' (explicit fallback)
+            // Chromium does NOT honor (prefers-color-scheme: no-preference) — it
+            // always reports "no OS pref" as light-matches. For Chromium we
+            // accept the brand-default-dark trade-off by also checking the
+            // user-agent's effective color-scheme via media-feature presence:
+            // if BOTH light and dark return false (true no-preference per spec)
+            // we fall through to dark. If only light returns true (Chromium's
+            // "no pref" or explicit light) we honor light. To distinguish
+            // Chromium's no-pref from explicit light we use the absence of a
+            // stored choice as a tie-breaker: stored == null + only light
+            // matches → treat as "no pref" → default dark.
+            // Practical cascade for the IIFE:
+            //   stored   → stored
+            //   dark mq  → dark
+            //   light mq + no stored → dark (brand default; covers Chromium
+            //                           "no preference" + spec no-preference)
+            //   light mq + no stored → dark
+            //   light mq + stored    → light (only reached if stored exists;
+            //                            stored branch already returned)
+            // Effectively: stored wins, otherwise brand default is dark.
+            var theme = (stored === 'light' || stored === 'dark')
+                ? stored
+                : 'dark';
+            var root = document.documentElement;
+            if (theme === 'light') { root.classList.add('light'); }
+            else { root.classList.remove('light'); }
+            var meta = document.querySelector('meta[name="theme-color"]');
+            if (meta) meta.setAttribute('content', theme === 'light' ? '#F8F9FA' : '#0a0a0a');
+        } catch (e) { /* localStorage blocked → keep default dark */ }
+    })();
+    </script>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Phosphor Icons (CSS webfont — eliminates FOUC vs. the JS loader) -->
+    <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web/src/regular/style.css">
+    <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web/src/bold/style.css">
+    <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web/src/fill/style.css">
+
+    <!-- Tailwind CSS -->
+    <!-- NOTE: Tailwind CDN (Play CDN) is used here for the single-file demo constraint.
+         For production, migrate to a build step (Tailwind CLI, PostCSS, or Vite) to
+         purge unused classes, hash the output, and remove this script (~370KB). -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- GSAP & ScrollTrigger (deferred so they don't block first paint) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js" defer></script>
+
+    <!-- Lenis smooth scroll (v3) — defer so it loads in parallel but executes before main script -->
+    <script src="https://unpkg.com/lenis@1.1.13/dist/lenis.min.js" defer></script>
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+                        display: ['Space Grotesk', 'Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            // Semantic tokens — switch via html.light class (v3)
+                            bg: 'var(--color-bg)',
+                            surface: 'var(--color-surface)',
+                            'surface-2': 'var(--color-surface-2)',
+                            border: 'var(--color-border)',
+                            text: 'var(--color-text)',
+                            muted: 'var(--color-muted)',
+                            // Constants — identical in both modes
+                            accent: '#FF3366',
+                            accent2: '#7C3AED',
+                            success: '#10b981',
+                            error: '#ef4444',
+                        }
+                    },
+                    borderRadius: {
+                        'sm': '0.5rem',
+                        'md': '0.75rem',
+                        'lg': '1rem',
+                    },
+                    spacing: {
+                        'section': '5rem',
+                    },
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* ============================================================
+           Design tokens (mirrored as CSS custom properties so the
+           non-Tailwind CSS below can reference them).
+           v3: split into :root (dark) and html.light (light) so the
+           whole theme can be swapped by toggling one class on <html>.
+           ============================================================ */
+        :root {
+            --color-bg: #0a0a0a;
+            --color-surface: #141414;
+            --color-surface-2: #1a1a1a;
+            --color-border: rgba(255, 255, 255, 0.08);
+            --color-text: #f5f5f5;
+            --color-muted: #a3a3a3;
+            --color-accent: #FF3366;
+            --color-accent-2: #7C3AED;
+            --color-success: #10b981;
+            --color-error: #ef4444;
+
+            --hero-orb-opacity: 0.20;
+            --glass-bg: rgba(10, 10, 10, 0.7);
+            --text-stroke-color: rgba(255, 255, 255, 0.25);
+            --ring-color: rgba(255, 255, 255, 0.05);
+            --blend-mode: overlay;
+            --placeholder-bg: #1a1a1a;
+            --input-text: #f5f5f5;
+            --input-border: rgba(255, 255, 255, 0.20);
+            --label-color: #a3a3a3;
+            --scroll-indicator-from: #ffffff;
+            --card-hover-border: rgba(255, 255, 255, 0.30);
+
+            --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+            --font-display: 'Space Grotesk', 'Inter', sans-serif;
+
+            --radius-sm: 0.5rem;
+            --radius-md: 0.75rem;
+            --radius-lg: 1rem;
+            --radius-full: 9999px;
+
+            --space-section: 5rem;
+
+            /* Smooth color transitions when the user toggles theme */
+            color-scheme: dark;
+            transition: background-color 0.25s ease, color 0.25s ease;
+        }
+
+        html.light {
+            --color-bg: #F8F9FA;
+            --color-surface: #FFFFFF;
+            --color-surface-2: #EEF0F2;
+            --color-border: rgba(15, 23, 42, 0.08);
+            --color-text: #0F172A;
+            --color-muted: #64748B;
+            --hero-orb-opacity: 0.10;
+            --glass-bg: rgba(248, 249, 250, 0.8);
+            --text-stroke-color: rgba(15, 23, 42, 0.20);
+            --ring-color: rgba(15, 23, 42, 0.10);
+            --blend-mode: multiply;
+            --placeholder-bg: #E5E7EB;
+            --input-text: #0F172A;
+            --input-border: rgba(15, 23, 42, 0.20);
+            --label-color: #64748B;
+            --scroll-indicator-from: #0F172A;
+            --card-hover-border: rgba(15, 23, 42, 0.30);
+            color-scheme: light;
+        }
+
+        /* ============================================================
+           Base
+           ============================================================ */
+        body {
+            background-color: var(--color-bg);
+            color: var(--color-text);
+            font-family: var(--font-sans);
+            overflow-x: hidden;
+            cursor: none;
+            transition: background-color 0.25s ease, color 0.25s ease;
+        }
+        /* Honor Lenis scroll: keep html at full height with smooth wheel */
+        html { height: auto; }
+        html.lenis, html.lenis body { height: auto; }
+        .lenis.lenis-smooth { scroll-behavior: auto !important; }
+        .lenis.lenis-smooth [data-lenis-prevent] { overscroll-behavior: contain; }
+        .lenis.lenis-stopped { overflow: hidden; }
+        .lenis.lenis-scrolling iframe { pointer-events: none; }
+
+        /* ============================================================
+           Skip-to-content link (first focusable element, visually
+           hidden until keyboard focus)
+           ============================================================ */
+        .skip-link {
+            position: absolute;
+            top: -100px;
+            left: 1rem;
+            z-index: 10000;
+            padding: 0.75rem 1.25rem;
+            background: var(--color-accent);
+            color: #fff;
+            font-weight: 600;
+            border-radius: var(--radius-sm);
+            text-decoration: none;
+            transition: top 0.2s ease;
+        }
+        .skip-link:focus { top: 1rem; outline: 3px solid #fff; outline-offset: 2px; }
+
+        /* ============================================================
+           Custom Cursor — hidden by default; JS only attaches listeners
+           if the user does NOT prefer reduced motion and is not on a
+           touch device (defense-in-depth — CSS also hides it below).
+           ============================================================ */
+        #cursor, #cursor-follower {
+            position: fixed;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+            z-index: 9999;
+            transform: translate(-50%, -50%);
+            border-radius: 50%;
+            will-change: transform, width, height;
+        }
+        #cursor {
+            width: 8px;
+            height: 8px;
+            background-color: var(--color-accent);
+            transition: width 0.25s ease, height 0.25s ease, opacity 0.25s ease, background-color 0.25s ease;
+        }
+        #cursor-follower {
+            width: 40px;
+            height: 40px;
+            border: 1px solid rgba(255, 51, 102, 0.5);
+            transition: width 0.3s ease, height 0.3s ease, background-color 0.3s ease, border-color 0.3s ease;
+        }
+        body.hovering #cursor { width: 0; height: 0; }
+        body.hovering #cursor-follower {
+            width: 80px;
+            height: 80px;
+            background-color: rgba(255, 51, 102, 0.1);
+            border-color: var(--color-accent);
+            backdrop-filter: blur(2px);
+        }
+        /* Hide custom cursor on touch + reduced motion */
+        @media (hover: none), (pointer: coarse), (prefers-reduced-motion: reduce) {
+            body { cursor: auto; }
+            #cursor, #cursor-follower { display: none; }
+        }
+
+        /* ============================================================
+           Utilities
+           ============================================================ */
+        .glass {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--color-border);
+            transition: background 0.25s ease, border-color 0.25s ease;
+        }
+        .text-gradient {
+            background: linear-gradient(to right, var(--color-accent), var(--color-accent-2));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            color: transparent;
+        }
+        .text-stroke {
+            /* Subtle fill so the text has visible body even at huge sizes.
+               A pure transparent fill combined with a 1px stroke at 25%
+               opacity was making 8xl hero text effectively invisible.
+               8% white (dark) / 8% slate (light) gives a "ghost fill"
+               so the letterforms read as shapes, without overpowering
+               the outline look. The stroke is also bumped to 1.5px for
+               the same reason. */
+            color: rgba(255, 255, 255, 0.08);
+            -webkit-text-stroke: 1.5px var(--text-stroke-color);
+            transition: color 0.3s ease, -webkit-text-stroke 0.3s ease;
+        }
+
+        /* v3.2 — Hero baseline visibility safety net.
+           GSAP `from({ opacity: 0, ... })` sets the FROM state with
+           immediateRender, then animates to the natural state. If the
+           animation never fires (prefers-reduced-motion: reduce flips
+           the matchMedia off, or a JS error breaks the GSAP init), the
+           elements would stay at opacity 0 forever and the entire hero
+           would be invisible (only the orbs and SCROLL indicator would
+           show). This baseline rule makes the hero content visible by
+           default. When GSAP runs, its inline styles override this
+           baseline; when GSAP doesn't run, the CSS keeps the hero
+           visible. */
+        .gsap-hero-badge,
+        .gsap-hero-text span,
+        .gsap-hero-sub,
+        .gsap-hero-btn > * { opacity: 1; }
+        .text-stroke:hover {
+            color: var(--color-text);
+            -webkit-text-stroke: 1.5px transparent;
+        }
+        /* Light-mode ghost fill — same 8% on the off-white canvas */
+        html.light .text-stroke { color: rgba(15, 23, 42, 0.08); }
+
+        .reveal-img { clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%); }
+
+        /* Form field focus ring (a11y) */
+        .field {
+            transition: border-color 0.2s ease, color 0.2s ease;
+            color: var(--input-text);
+        }
+        .field:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 4px; }
+        .field::placeholder { color: transparent; }
+        /* Chrome autofill yellow flash override (both modes) */
+        .field:-webkit-autofill,
+        .field:-webkit-autofill:hover,
+        .field:-webkit-autofill:focus {
+            -webkit-text-fill-color: var(--input-text);
+            -webkit-box-shadow: 0 0 0 1000px var(--color-surface-2) inset;
+            transition: background-color 9999s ease-out 0s;
+        }
+
+        /* Scrollbar (theme-aware via CSS vars) */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: var(--color-bg); }
+        ::-webkit-scrollbar-thumb { background: var(--color-surface-2); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--color-accent); }
+
+        /* ============================================================
+           Marquee — keyframe pinned to translateX(-50%) so the
+           duplicated items loop seamlessly. Wrapped in
+           prefers-reduced-motion: no-preference.
+           ============================================================ */
+        @media (prefers-reduced-motion: no-preference) {
+            .animate-marquee { animation: marquee 30s linear infinite; }
+            .animate-spin-slow { animation: spin 8s linear infinite; }
+        }
+        @keyframes marquee {
+            0%   { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* ============================================================
+           Scroll-snap horizontal track for Testimonios on mobile
+           (dead code in v3.1 — left in place per "smallest coherent
+           change" scope; testimonios is now a static grid)
+           ============================================================ */
+        .snap-x-mobile { scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; }
+        .snap-x-mobile > * { scroll-snap-align: start; }
+
+        /* ============================================================
+           Back-to-top: force hidden on mobile (< md).
+           The button only matters on desktop; on mobile the sticky
+           "Hablemos" pill already lives in the bottom-right corner.
+           ============================================================ */
+        @media (max-width: 767px) {
+            #back-to-top { display: none !important; }
+        }
+
+        /* ============================================================
+           Method pills: alternating accent on hover
+           ============================================================ */
+        .method-step:nth-child(odd)  .method-num { color: var(--color-accent); }
+        .method-step:nth-child(even) .method-num { color: var(--color-accent-2); }
+
+        /* ============================================================
+           v3 — Light mode overrides
+           - opacity-modified white/black utilities
+           - image placeholder bg
+           - portfolio hover blend mode (overlay → multiply)
+           - contact ring borders
+           - hero orb opacity (handled via inline style)
+           - scroll indicator gradient color
+           - form field colors
+           ============================================================ */
+        html.light .text-white\/20 { color: rgba(15, 23, 42, 0.20); }
+        html.light .text-white\/30 { color: rgba(15, 23, 42, 0.40); }
+        html.light .text-white\/40 { color: rgba(15, 23, 42, 0.55); }
+        html.light .text-white\/60 { color: rgba(15, 23, 42, 0.65); }
+        html.light .border-white\/5  { border-color: rgba(15, 23, 42, 0.05); }
+        html.light .border-white\/10 { border-color: rgba(15, 23, 42, 0.10); }
+        html.light .border-white\/20 { border-color: rgba(15, 23, 42, 0.15); }
+        html.light .border-white\/30 { border-color: rgba(15, 23, 42, 0.20); }
+        html.light .bg-white\/5        { background-color: rgba(15, 23, 42, 0.05); }
+        html.light .bg-white\/10       { background-color: rgba(15, 23, 42, 0.10); }
+        html.light .bg-white\/\[0\.02\] { background-color: rgba(15, 23, 42, 0.02); }
+        html.light .bg-white\/\[0\.04\] { background-color: rgba(15, 23, 42, 0.04); }
+        html.light .bg-gray-900 { background-color: var(--placeholder-bg); }
+
+        /* Marquee band (P2.2): give it a real surface in light so it doesn't disappear.
+           .marquee-band keeps the dark mode subtle highlight (Tailwind utilities
+           on the container), but in light mode the surface is replaced with the
+           --color-surface-2 token (#EEF0F2) and the border bumped to 0.10. */
+        html.light .marquee-band {
+            background-color: var(--color-surface-2);
+            border-color: rgba(15, 23, 42, 0.10);
+        }
+
+        /* Portfolio hover blend mode: overlay (dark) → multiply (light) */
+        .gsap-project .mix-blend-overlay { mix-blend-mode: var(--blend-mode); }
+
+        /* Contact section spinning rings (border-white/5 → border-black/10) */
+        .contact-ring { border-color: var(--ring-color); }
+
+        /* Scroll indicator gradient (from-white → from-[var(--scroll-indicator-from)]) */
+        .scroll-indicator-line { background: linear-gradient(to bottom, var(--scroll-indicator-from), transparent); }
+
+        /* "Ver caso completo" footer project link: text-white → text-brand-text in light */
+        html.light .text-theme { color: var(--color-text); }
+        .text-theme { color: #ffffff; }
+        /* Service card hover border (white/30 in dark, dark/30 in light) */
+        .border-theme-card { border-color: var(--card-hover-border); }
+
+        /* Input labels — use brand-muted for theme uniformity */
+        .form-label { color: var(--label-color); }
+
+        /* btn-inverse: primary CTA — white in dark, near-black in light */
+        .btn-inverse {
+            background-color: #ffffff;
+            color: var(--color-bg);
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        html.light .btn-inverse {
+            background-color: var(--color-text);
+            color: var(--color-bg);
+        }
+        .btn-inverse:hover { background-color: var(--color-accent); color: #ffffff; }
+
+        /* Sticky mobile CTA icon ring (border-white/30) — light override */
+        html.light .border-white\/30 { border-color: rgba(15, 23, 42, 0.30); }
+
+        /* ============================================================
+           v3 — Theme toggle (sun/moon button, 40x40 circular)
+           ============================================================ */
+        .theme-toggle {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            border-radius: 9999px;
+            border: 1px solid var(--color-border);
+            background: var(--color-surface-2);
+            color: var(--color-text);
+            transition: background-color 0.25s ease, border-color 0.25s ease, transform 0.2s ease, color 0.2s ease;
+        }
+        .theme-toggle:hover { border-color: var(--color-accent); color: var(--color-accent); }
+        .theme-toggle:focus-visible { outline: none; }
+        .theme-toggle .ph { font-size: 1.15rem; line-height: 1; transition: transform 0.2s ease, opacity 0.2s ease; }
+        .theme-toggle .icon-sun,
+        .theme-toggle .icon-moon { display: none; }
+        .theme-toggle .icon-sun  { display: inline; }  /* default dark → show sun (click to go light) */
+        .theme-toggle .icon-moon { display: none; }
+        html.light .theme-toggle .icon-sun  { display: none; }
+        html.light .theme-toggle .icon-moon { display: inline; }
+        /* Brief rotate+fade on icon swap */
+        .theme-toggle .ph.is-swapping { transform: rotate(180deg) scale(0.7); opacity: 0; }
+
+        /* Generic focus-visible global (keyboard nav) */
+        a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible {
+            outline: 2px solid var(--color-accent);
+            outline-offset: 2px;
+        }
+        .theme-toggle:focus-visible { box-shadow: 0 0 0 2px var(--color-bg), 0 0 0 4px var(--color-accent); }
+
+        /* Mobile menu overlay bg (bg-brand-dark/95) — needs light override */
+        #mobile-menu { background-color: var(--color-bg); }
+        html.light #mobile-menu { background-color: rgba(248, 249, 250, 0.97); }
+        #mobile-menu { transition: background-color 0.25s ease; }
+    </style>
+</head>
+
+<body class="antialiased selection:bg-brand-accent selection:text-white">
+
+    <a href="#main" class="skip-link">Saltar al contenido principal</a>
+
+    <div id="cursor" aria-hidden="true"></div>
+    <div id="cursor-follower" aria-hidden="true"></div>
+
+    <!-- Scroll progress bar (1px gradient line, top of viewport) -->
+    <div id="scroll-progress" aria-hidden="true" style="position:fixed;top:0;left:0;height:2px;width:0;z-index:60;background:linear-gradient(90deg,var(--color-accent),var(--color-accent-2));transition:width 0.05s linear;"></div>
+
+    <!-- ============================================================
+         Navigation
+         ============================================================ -->
+    <nav class="fixed w-full z-50 glass transition-shadow duration-300" id="navbar" aria-label="Navegación principal">
+        <div class="max-w-7xl mx-auto px-6 lg:px-12 py-4 flex justify-between items-center">
+            <a href="#main" class="text-2xl font-display font-bold tracking-tighter flex items-center gap-2 z-50" data-cursor-hover>
+                <i class="ph-fill ph-planet text-brand-accent text-3xl" aria-hidden="true"></i>
+                NEXUS
+            </a>
+
+            <div class="hidden md:flex gap-8 items-center font-medium text-sm tracking-wide">
+                <a href="#services" class="nav-link hover:text-brand-accent transition-colors" data-cursor-hover>Servicios</a>
+                <a href="#metodologia" class="nav-link hover:text-brand-accent transition-colors" data-cursor-hover>Metodología</a>
+                <a href="#work" class="nav-link hover:text-brand-accent transition-colors" data-cursor-hover>Trabajo</a>
+                <a href="#testimonios" class="nav-link hover:text-brand-accent transition-colors" data-cursor-hover>Testimonios</a>
+                <button id="theme-toggle"
+                        type="button"
+                        class="theme-toggle"
+                        aria-label="Cambiar a modo claro"
+                        aria-pressed="false"
+                        data-cursor-hover>
+                    <i class="ph ph-sun icon-sun" aria-hidden="true"></i>
+                    <i class="ph ph-moon icon-moon" aria-hidden="true"></i>
+                </button>
+                <a href="#contact" class="px-5 py-2.5 rounded-full border border-white/20 hover:border-brand-accent hover:bg-brand-accent transition-all duration-300" data-cursor-hover>Hablemos</a>
+            </div>
+
+            <div class="md:hidden flex items-center gap-1 z-50">
+                <button id="theme-toggle-mobile"
+                        type="button"
+                        class="theme-toggle"
+                        aria-label="Cambiar a modo claro"
+                        aria-pressed="false"
+                        data-cursor-hover>
+                    <i class="ph ph-sun icon-sun" aria-hidden="true"></i>
+                    <i class="ph ph-moon icon-moon" aria-hidden="true"></i>
+                </button>
+                <button id="mobile-menu-btn" type="button"
+                        class="text-2xl p-2 -mr-2"
+                        aria-label="Abrir menú"
+                        aria-expanded="false"
+                        aria-controls="mobile-menu"
+                        data-cursor-hover>
+                    <i class="ph ph-list" aria-hidden="true"></i>
+                </button>
+            </div>
+        </div>
+
+        <div id="mobile-menu"
+             class="fixed inset-0 bg-brand-bg/95 backdrop-blur-xl flex flex-col justify-center items-center gap-8 opacity-0 pointer-events-none transition-opacity duration-300 z-40"
+             role="dialog"
+             aria-modal="true"
+             aria-label="Menú móvil"
+             data-lenis-prevent>
+            <a href="#services" class="mobile-link text-4xl font-display font-bold hover:text-brand-accent transition-colors">Servicios</a>
+            <a href="#metodologia" class="mobile-link text-4xl font-display font-bold hover:text-brand-accent transition-colors">Metodología</a>
+            <a href="#work" class="mobile-link text-4xl font-display font-bold hover:text-brand-accent transition-colors">Trabajo</a>
+            <a href="#testimonios" class="mobile-link text-4xl font-display font-bold hover:text-brand-accent transition-colors">Testimonios</a>
+            <a href="#contact" class="mobile-link text-4xl font-display font-bold text-gradient">Hablemos</a>
+        </div>
+    </nav>
+
+    <main id="main">
+
+        <!-- ============================================================
+             Hero
+             ============================================================ -->
+        <section class="relative min-h-screen flex items-center justify-center pt-20 overflow-hidden" aria-labelledby="hero-title">
+            <div class="absolute top-1/4 -left-32 w-96 h-96 bg-brand-accent rounded-full blur-[120px] pointer-events-none hero-orb" style="opacity: var(--hero-orb-opacity);" aria-hidden="true"></div>
+            <div class="absolute bottom-1/4 -right-32 w-96 h-96 bg-brand-accent2 rounded-full blur-[120px] pointer-events-none hero-orb" style="opacity: var(--hero-orb-opacity);" aria-hidden="true"></div>
+
+            <div class="max-w-7xl mx-auto px-6 lg:px-12 w-full relative z-10 flex flex-col items-center text-center">
+                <div class="overflow-hidden mb-6">
+                    <span class="gsap-hero-badge inline-block py-1.5 px-4 rounded-full border border-white/10 bg-white/5 text-sm font-medium tracking-widest uppercase text-brand-accent backdrop-blur-sm">
+                        Agencia Digital Global · Lima, Perú
+                    </span>
+                </div>
+
+                <h1 id="hero-title" class="gsap-hero-text text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-display font-bold uppercase leading-[1.05] tracking-tighter mb-8 w-full">
+                    <span class="block">Diseñamos el</span>
+                    <span class="block text-stroke" data-cursor-hover>futuro digital</span>
+                </h1>
+
+                <p class="gsap-hero-sub max-w-2xl text-lg md:text-xl text-brand-muted font-light mb-12">
+                    Transformamos ideas audaces en experiencias digitales excepcionales. Estrategia, branding y desarrollo web al más alto nivel.
+                </p>
+
+                <div class="gsap-hero-btn flex flex-col sm:flex-row gap-4 items-center justify-center w-fit mx-auto">
+                    <a href="#work" class="group relative px-8 py-4 btn-inverse rounded-full font-semibold overflow-hidden transition-transform duration-300 hover:scale-105" data-cursor-hover>
+                        <span class="relative z-10 flex items-center gap-2 transition-colors duration-300 group-hover:text-white">
+                            Ver Proyectos <i class="ph ph-arrow-right group-hover:translate-x-1 transition-transform" aria-hidden="true"></i>
+                        </span>
+                        <div class="absolute inset-0 bg-brand-accent translate-y-[100%] group-hover:translate-y-0 transition-transform duration-300 ease-out z-0" aria-hidden="true"></div>
+                    </a>
+
+                    <a href="#services" class="px-8 py-4 rounded-full font-medium text-brand-muted hover:text-brand-text transition-colors duration-200 flex items-center gap-2" data-cursor-hover>
+                        Nuestros servicios
+                    </a>
+
+                    <a href="#metodologia" class="gsap-hero-btn-process px-6 py-4 rounded-full font-medium text-brand-muted hover:text-brand-text transition-colors duration-200 flex items-center gap-2 group" data-cursor-hover>
+                        <span class="w-9 h-9 rounded-full border border-white/30 group-hover:border-brand-accent group-hover:bg-brand-accent/10 flex items-center justify-center transition-all duration-300">
+                            <i class="ph-fill ph-arrow-down text-sm group-hover:text-brand-accent transition-colors duration-300" aria-hidden="true"></i>
+                        </span>
+                        Ver proceso
+                    </a>
+                </div>
+            </div>
+
+            <a href="#impacto" class="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-3 opacity-60 hover:opacity-100 transition-opacity" aria-label="Bajar a la siguiente sección" data-cursor-hover>
+                <span class="text-xs uppercase tracking-[0.3em]">Scroll</span>
+                <span class="w-[1px] h-14 block scroll-indicator-line" aria-hidden="true"></span>
+            </a>
+        </section>
+
+        <!-- ============================================================
+             Impact Metrics (NEW)
+             ============================================================ -->
+        <section id="impacto" class="py-20 md:py-28 border-t border-b border-white/5" aria-labelledby="impacto-title">
+            <div class="max-w-7xl mx-auto px-6 lg:px-12">
+                <div class="mb-14 max-w-2xl">
+                    <h2 id="impacto-title" class="text-brand-accent font-medium tracking-widest uppercase mb-3 text-sm">Impacto</h2>
+                    <p class="text-3xl md:text-5xl font-display font-bold tracking-tight">Números que <span class="text-gradient">avalan</span> nuestro trabajo.</p>
+                </div>
+
+                <ul class="grid grid-cols-2 lg:grid-cols-4 gap-6" role="list">
+                    <li class="metric-card p-6 md:p-8 rounded-2xl bg-brand-surface border border-brand-border gsap-fade-up" data-cursor-hover>
+                        <div class="flex items-center gap-3 text-brand-accent mb-4">
+                            <i class="ph ph-briefcase text-2xl" aria-hidden="true"></i>
+                            <span class="text-xs uppercase tracking-widest text-brand-muted">Proyectos</span>
+                        </div>
+                        <p class="text-5xl md:text-6xl font-display font-bold leading-none">
+                            <span class="counter" data-target="120" data-suffix="+">0</span>
+                        </p>
+                        <p class="text-sm text-brand-muted mt-3">Lanzamientos digitales</p>
+                    </li>
+
+                    <li class="metric-card p-6 md:p-8 rounded-2xl bg-brand-surface border border-brand-border gsap-fade-up" data-cursor-hover>
+                        <div class="flex items-center gap-3 text-brand-accent2 mb-4">
+                            <i class="ph ph-calendar-blank text-2xl" aria-hidden="true"></i>
+                            <span class="text-xs uppercase tracking-widest text-brand-muted">Años</span>
+                        </div>
+                        <p class="text-5xl md:text-6xl font-display font-bold leading-none">
+                            <span class="counter" data-target="9" data-suffix="">0</span>
+                        </p>
+                        <p class="text-sm text-brand-muted mt-3">Construyendo marcas</p>
+                    </li>
+
+                    <li class="metric-card p-6 md:p-8 rounded-2xl bg-brand-surface border border-brand-border gsap-fade-up" data-cursor-hover>
+                        <div class="flex items-center gap-3 text-brand-accent mb-4">
+                            <i class="ph ph-trophy text-2xl" aria-hidden="true"></i>
+                            <span class="text-xs uppercase tracking-widest text-brand-muted">Premios</span>
+                        </div>
+                        <p class="text-5xl md:text-6xl font-display font-bold leading-none">
+                            <span class="counter" data-target="24" data-suffix="">0</span>
+                        </p>
+                        <p class="text-sm text-brand-muted mt-3">Awwwards, FWA, CSSDA</p>
+                    </li>
+
+                    <li class="metric-card p-6 md:p-8 rounded-2xl bg-brand-surface border border-brand-border gsap-fade-up" data-cursor-hover>
+                        <div class="flex items-center gap-3 text-brand-accent2 mb-4">
+                            <i class="ph ph-users-three text-2xl" aria-hidden="true"></i>
+                            <span class="text-xs uppercase tracking-widest text-brand-muted">Clientes</span>
+                        </div>
+                        <p class="text-5xl md:text-6xl font-display font-bold leading-none">
+                            <span class="counter" data-target="48" data-suffix="+">0</span>
+                        </p>
+                        <p class="text-sm text-brand-muted mt-3">En LATAM, USA y Europa</p>
+                    </li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- ============================================================
+             Marquee (P0 fix: translateX(-50%))
+             ============================================================ -->
+        <div class="marquee-band py-10 border-y border-white/5 bg-white/[0.02] overflow-hidden flex whitespace-nowrap" role="presentation" aria-hidden="true">
+            <div class="animate-marquee flex gap-12 md:gap-24 px-6 items-center" style="will-change: transform;">
+                <h3 class="text-2xl md:text-4xl font-display font-bold text-white/30 uppercase">Innovación</h3>
+                <i class="ph-fill ph-star-four text-brand-accent"></i>
+                <h3 class="text-2xl md:text-4xl font-display font-bold text-white/30 uppercase">Creatividad</h3>
+                <i class="ph-fill ph-star-four text-brand-accent"></i>
+                <h3 class="text-2xl md:text-4xl font-display font-bold text-white/30 uppercase">Desarrollo</h3>
+                <i class="ph-fill ph-star-four text-brand-accent"></i>
+                <h3 class="text-2xl md:text-4xl font-display font-bold text-white/30 uppercase">Estrategia</h3>
+                <i class="ph-fill ph-star-four text-brand-accent"></i>
+
+                <!-- Duplicate set: required for seamless translateX(-50%) loop -->
+                <h3 class="text-2xl md:text-4xl font-display font-bold text-white/30 uppercase" aria-hidden="true">Innovación</h3>
+                <i class="ph-fill ph-star-four text-brand-accent" aria-hidden="true"></i>
+                <h3 class="text-2xl md:text-4xl font-display font-bold text-white/30 uppercase" aria-hidden="true">Creatividad</h3>
+                <i class="ph-fill ph-star-four text-brand-accent" aria-hidden="true"></i>
+                <h3 class="text-2xl md:text-4xl font-display font-bold text-white/30 uppercase" aria-hidden="true">Desarrollo</h3>
+                <i class="ph-fill ph-star-four text-brand-accent" aria-hidden="true"></i>
+                <h3 class="text-2xl md:text-4xl font-display font-bold text-white/30 uppercase" aria-hidden="true">Estrategia</h3>
+                <i class="ph-fill ph-star-four text-brand-accent" aria-hidden="true"></i>
+            </div>
+        </div>
+
+        <!-- ============================================================
+             Services
+             ============================================================ -->
+        <section id="services" class="py-20 md:py-32 px-6 lg:px-12 max-w-7xl mx-auto" aria-labelledby="services-title">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-16 md:mb-20 gap-8">
+                <div class="max-w-2xl">
+                    <h2 id="services-title" class="text-brand-accent font-medium tracking-widest uppercase mb-4 text-sm">Expertise</h2>
+                    <h3 class="text-4xl md:text-6xl font-display font-bold tracking-tight gsap-fade-up">Lo que <span class="text-gradient">hacemos mejor</span>.</h3>
+                </div>
+                <p class="text-brand-muted max-w-sm text-lg gsap-fade-up">
+                    Soluciones integrales diseñadas para posicionar marcas en la vanguardia digital.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <article class="group p-8 rounded-2xl bg-brand-surface border border-brand-border hover:border-brand-accent/50 transition-all duration-500 hover:-translate-y-1 gsap-fade-up" data-cursor-hover>
+                    <div class="w-16 h-16 rounded-xl bg-brand-accent/10 flex items-center justify-center mb-8 group-hover:scale-110 transition-transform duration-500">
+                        <i class="ph ph-desktop text-3xl text-brand-accent" aria-hidden="true"></i>
+                    </div>
+                    <h4 class="text-2xl font-display font-bold mb-4">Diseño Web &amp; UX/UI</h4>
+                    <p class="text-brand-muted font-light leading-relaxed mb-8">
+                        Interfaces hermosas, intuitivas y centradas en el usuario que convierten visitantes en clientes leales.
+                    </p>
+                    <ul class="space-y-2 text-sm text-brand-muted">
+                        <li class="flex items-center gap-2"><i class="ph-fill ph-check-circle text-brand-accent2" aria-hidden="true"></i> Prototipado</li>
+                        <li class="flex items-center gap-2"><i class="ph-fill ph-check-circle text-brand-accent2" aria-hidden="true"></i> Diseño Visual</li>
+                        <li class="flex items-center gap-2"><i class="ph-fill ph-check-circle text-brand-accent2" aria-hidden="true"></i> Animación Web</li>
+                    </ul>
+                </article>
+
+                <article class="group p-8 rounded-2xl bg-brand-surface border border-brand-border hover:border-brand-accent2/50 transition-all duration-500 hover:-translate-y-1 gsap-fade-up" data-cursor-hover>
+                    <div class="w-16 h-16 rounded-xl bg-brand-accent2/10 flex items-center justify-center mb-8 group-hover:scale-110 transition-transform duration-500">
+                        <i class="ph ph-code-block text-3xl text-brand-accent2" aria-hidden="true"></i>
+                    </div>
+                    <h4 class="text-2xl font-display font-bold mb-4">Desarrollo Creativo</h4>
+                    <p class="text-brand-muted font-light leading-relaxed mb-8">
+                        Código limpio y arquitecturas robustas. Construimos sitios rápidos, accesibles y escalables.
+                    </p>
+                    <ul class="space-y-2 text-sm text-brand-muted">
+                        <li class="flex items-center gap-2"><i class="ph-fill ph-check-circle text-brand-accent" aria-hidden="true"></i> Frontend (React, Vue)</li>
+                        <li class="flex items-center gap-2"><i class="ph-fill ph-check-circle text-brand-accent" aria-hidden="true"></i> Backend &amp; APIs</li>
+                        <li class="flex items-center gap-2"><i class="ph-fill ph-check-circle text-brand-accent" aria-hidden="true"></i> WebGL &amp; 3D</li>
+                    </ul>
+                </article>
+
+                <article class="group p-8 rounded-2xl bg-brand-surface border border-brand-border hover:border-theme-card transition-all duration-500 hover:-translate-y-1 gsap-fade-up" data-cursor-hover>
+                    <div class="w-16 h-16 rounded-xl bg-white/10 flex items-center justify-center mb-8 group-hover:scale-110 transition-transform duration-500">
+                        <i class="ph ph-strategy text-3xl text-theme" aria-hidden="true"></i>
+                    </div>
+                    <h4 class="text-2xl font-display font-bold mb-4">Estrategia &amp; Branding</h4>
+                    <p class="text-brand-muted font-light leading-relaxed mb-8">
+                        Definimos el alma de tu empresa. Identidades visuales memorables que conectan con tu audiencia.
+                    </p>
+                    <ul class="space-y-2 text-sm text-brand-muted">
+                        <li class="flex items-center gap-2"><i class="ph-fill ph-check-circle text-brand-muted" aria-hidden="true"></i> Identidad de Marca</li>
+                        <li class="flex items-center gap-2"><i class="ph-fill ph-check-circle text-brand-muted" aria-hidden="true"></i> Dirección de Arte</li>
+                        <li class="flex items-center gap-2"><i class="ph-fill ph-check-circle text-brand-muted" aria-hidden="true"></i> Naming &amp; Tono</li>
+                    </ul>
+                </article>
+            </div>
+        </section>
+
+        <!-- ============================================================
+             Metodología (NEW)
+             ============================================================ -->
+        <section id="metodologia" class="py-20 md:py-32 bg-brand-surface border-y border-white/5" aria-labelledby="metodologia-title">
+            <div class="max-w-7xl mx-auto px-6 lg:px-12">
+                <div class="max-w-3xl mb-16">
+                    <h2 id="metodologia-title" class="text-brand-accent font-medium tracking-widest uppercase mb-4 text-sm">Proceso</h2>
+                    <h3 class="text-4xl md:text-6xl font-display font-bold tracking-tight gsap-fade-up">
+                        Una <span class="text-gradient">metodología</span> probada.
+                    </h3>
+                    <p class="text-brand-muted text-lg mt-6 max-w-xl gsap-fade-up">
+                        Cinco fases iterativas que combinan investigación, diseño y tecnología para llevar cada proyecto del brief al lanzamiento.
+                    </p>
+                </div>
+
+                <ol class="grid grid-cols-1 lg:grid-cols-5 gap-6 lg:gap-4" role="list">
+                    <li class="method-step relative p-6 md:p-7 rounded-2xl bg-brand-surface-2 border border-brand-border gsap-fade-up">
+                        <span class="method-num block font-display font-bold text-4xl mb-4">01</span>
+                        <h4 class="font-display font-semibold text-xl mb-2">Descubrimiento</h4>
+                        <p class="text-sm text-brand-muted leading-relaxed">Investigación de mercado, entrevistas y auditoría técnica para definir el problema real.</p>
+                    </li>
+                    <li class="method-step relative p-6 md:p-7 rounded-2xl bg-brand-surface-2 border border-brand-border gsap-fade-up">
+                        <span class="method-num block font-display font-bold text-4xl mb-4">02</span>
+                        <h4 class="font-display font-semibold text-xl mb-2">Estrategia</h4>
+                        <p class="text-sm text-brand-muted leading-relaxed">Roadmap, KPIs, arquitectura de información y propuesta de valor validada con stakeholders.</p>
+                    </li>
+                    <li class="method-step relative p-6 md:p-7 rounded-2xl bg-brand-surface-2 border border-brand-border gsap-fade-up">
+                        <span class="method-num block font-display font-bold text-4xl mb-4">03</span>
+                        <h4 class="font-display font-semibold text-xl mb-2">Diseño</h4>
+                        <p class="text-sm text-brand-muted leading-relaxed">Sistema visual, prototipado de alta fidelidad y pruebas de usabilidad iterativas.</p>
+                    </li>
+                    <li class="method-step relative p-6 md:p-7 rounded-2xl bg-brand-surface-2 border border-brand-border gsap-fade-up">
+                        <span class="method-num block font-display font-bold text-4xl mb-4">04</span>
+                        <h4 class="font-display font-semibold text-xl mb-2">Desarrollo</h4>
+                        <p class="text-sm text-brand-muted leading-relaxed">Implementación frontend y backend con CI/CD, accessibility-audit y performance budget.</p>
+                    </li>
+                    <li class="method-step relative p-6 md:p-7 rounded-2xl bg-brand-surface-2 border border-brand-border gsap-fade-up">
+                        <span class="method-num block font-display font-bold text-4xl mb-4">05</span>
+                        <h4 class="font-display font-semibold text-xl mb-2">Lanzamiento</h4>
+                        <p class="text-sm text-brand-muted leading-relaxed">QA final, deploy, medición post-launch y un ciclo de mejora continua de 90 días.</p>
+                    </li>
+                </ol>
+            </div>
+        </section>
+
+        <!-- ============================================================
+             Work / Portfolio
+             ============================================================ -->
+        <section id="work" class="py-20 md:py-32 bg-white/[0.02] border-t border-white/5" aria-labelledby="work-title">
+            <div class="max-w-7xl mx-auto px-6 lg:px-12">
+                <div class="flex flex-col items-center text-center mb-16 md:mb-20">
+                    <h2 id="work-title" class="text-brand-accent font-medium tracking-widest uppercase mb-4 text-sm">Casos de Estudio</h2>
+                    <h3 class="text-4xl md:text-6xl font-display font-bold tracking-tight gsap-fade-up">Obras <span class="text-stroke">Destacadas</span>.</h3>
+                </div>
+
+                <div class="space-y-24 md:space-y-32">
+
+                    <!-- Project 1 — Aura Cosméticos -->
+                    <article class="group grid grid-cols-1 lg:grid-cols-2 gap-10 md:gap-12 items-center gsap-project">
+                        <div class="order-2 lg:order-1">
+                            <span class="inline-block py-1 px-3 rounded-full border border-white/10 text-xs mb-6 text-brand-muted">E-Commerce / Web Design</span>
+                            <h4 class="text-4xl font-display font-bold mb-6 group-hover:text-brand-accent transition-colors duration-300">Aura Cosméticos</h4>
+                            <p class="text-brand-muted text-lg font-light mb-8 max-w-md">
+                                Una plataforma de comercio electrónico inmersiva diseñada para una marca de cosméticos premium, elevando la experiencia de compra mediante animaciones fluidas y diseño minimalista.
+                            </p>
+                            <a href="#work" class="inline-flex items-center gap-2 border-b border-brand-accent text-theme pb-1 hover:text-brand-accent transition-colors duration-200" data-cursor-hover>
+                                Ver caso completo <i class="ph ph-arrow-up-right" aria-hidden="true"></i>
+                            </a>
+                        </div>
+                        <div class="order-1 lg:order-2 overflow-hidden rounded-2xl aspect-[4/3] bg-gray-900 relative reveal-img" data-cursor-hover>
+                            <img src="images/aura-cosmeticos-1200.jpg"
+                                 srcset="images/aura-cosmeticos-800.jpg 800w,
+                                         images/aura-cosmeticos-1200.jpg 1200w,
+                                         images/aura-cosmeticos-1920.jpg 1920w"
+                                 sizes="(min-width: 1024px) 50vw, 100vw"
+                                 width="1200" height="900"
+                                 loading="lazy" decoding="async"
+                                 alt="Plataforma de e-commerce Aura Cosméticos con tipografía editorial y animaciones fluidas"
+                                 class="object-cover w-full h-full transform group-hover:scale-105 transition-transform duration-700 ease-out"
+                                 onerror="this.onerror=null;this.src='https://placehold.co/1200x900/1a1a1a/ffffff?text=Aura';">
+                            <div class="absolute inset-0 bg-brand-accent/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500 mix-blend-overlay" aria-hidden="true"></div>
+                        </div>
+                    </article>
+
+                    <!-- Project 2 — Nova Banking -->
+                    <article class="group grid grid-cols-1 lg:grid-cols-2 gap-10 md:gap-12 items-center gsap-project">
+                        <div class="overflow-hidden rounded-2xl aspect-[4/3] bg-gray-900 relative reveal-img" data-cursor-hover>
+                            <img src="images/nova-banking-1200.jpg"
+                                 srcset="images/nova-banking-800.jpg 800w,
+                                         images/nova-banking-1200.jpg 1200w,
+                                         images/nova-banking-1920.jpg 1920w"
+                                 sizes="(min-width: 1024px) 50vw, 100vw"
+                                 width="1200" height="900"
+                                 loading="lazy" decoding="async"
+                                 alt="Aplicación móvil Nova Banking con interfaz oscura y tipografía funcional"
+                                 class="object-cover w-full h-full transform group-hover:scale-105 transition-transform duration-700 ease-out"
+                                 onerror="this.onerror=null;this.src='https://placehold.co/1200x900/1a1a1a/ffffff?text=Nova';">
+                            <div class="absolute inset-0 bg-brand-accent2/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500 mix-blend-overlay" aria-hidden="true"></div>
+                        </div>
+                        <div class="pl-0 lg:pl-12">
+                            <span class="inline-block py-1 px-3 rounded-full border border-white/10 text-xs mb-6 text-brand-muted">FinTech / App Dev</span>
+                            <h4 class="text-4xl font-display font-bold mb-6 group-hover:text-brand-accent2 transition-colors duration-300">Nova Banking</h4>
+                            <p class="text-brand-muted text-lg font-light mb-8 max-w-md">
+                                Rediseño completo de aplicación móvil bancaria. Simplificamos la gestión financiera con una interfaz de usuario limpia, oscura y altamente segura.
+                            </p>
+                            <a href="#work" class="inline-flex items-center gap-2 border-b border-brand-accent2 text-theme pb-1 hover:text-brand-accent2 transition-colors duration-200" data-cursor-hover>
+                                Ver caso completo <i class="ph ph-arrow-up-right" aria-hidden="true"></i>
+                            </a>
+                        </div>
+                    </article>
+
+                    <!-- Project 3 — Helio Studios (NEW) -->
+                    <article class="group grid grid-cols-1 lg:grid-cols-2 gap-10 md:gap-12 items-center gsap-project">
+                        <div class="order-2 lg:order-1">
+                            <span class="inline-block py-1 px-3 rounded-full border border-white/10 text-xs mb-6 text-brand-muted">Branding / Dirección de Arte</span>
+                            <h4 class="text-4xl font-display font-bold mb-6 group-hover:text-brand-accent transition-colors duration-300">Helio Studios</h4>
+                            <p class="text-brand-muted text-lg font-light mb-8 max-w-md">
+                                Sistema de identidad visual para un estudio de cine independiente. Logotipo, tipografía editorial y piezas gráficas para festivals internacionales.
+                            </p>
+                            <a href="#work" class="inline-flex items-center gap-2 border-b border-brand-accent text-theme pb-1 hover:text-brand-accent transition-colors duration-200" data-cursor-hover>
+                                Ver caso completo <i class="ph ph-arrow-up-right" aria-hidden="true"></i>
+                            </a>
+                        </div>
+                        <div class="order-1 lg:order-2 overflow-hidden rounded-2xl aspect-[4/3] bg-gray-900 relative reveal-img" data-cursor-hover>
+                            <img src="images/helio-studios-1200.jpg"
+                                 srcset="images/helio-studios-800.jpg 800w,
+                                         images/helio-studios-1200.jpg 1200w,
+                                         images/helio-studios-1920.jpg 1920w"
+                                 sizes="(min-width: 1024px) 50vw, 100vw"
+                                 width="1200" height="900"
+                                 loading="lazy" decoding="async"
+                                 alt="Identidad visual Helio Studios con paleta cálida y tipografía display"
+                                 class="object-cover w-full h-full transform group-hover:scale-105 transition-transform duration-700 ease-out"
+                                 onerror="this.onerror=null;this.src='https://placehold.co/1200x900/1a1a1a/ffffff?text=Helio';">
+                            <div class="absolute inset-0 bg-brand-accent/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500 mix-blend-overlay" aria-hidden="true"></div>
+                        </div>
+                    </article>
+                </div>
+
+                <div class="mt-20 md:mt-24 text-center">
+                    <a href="#contact" class="inline-flex items-center justify-center w-40 h-40 rounded-full border border-white/20 hover:border-brand-accent hover:bg-brand-accent text-theme font-medium transition-all duration-500 hover:scale-110 gsap-fade-up" data-cursor-hover>
+                        <span class="text-center leading-tight">Ver todo<br>el archivo</span>
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================
+             Testimonios (NEW)
+             ============================================================ -->
+        <section id="testimonios" class="py-20 md:py-32 border-t border-white/5" aria-labelledby="testimonios-title">
+            <div class="max-w-7xl mx-auto px-6 lg:px-12">
+                <div class="max-w-3xl mb-16">
+                    <h2 id="testimonios-title" class="text-brand-accent font-medium tracking-widest uppercase mb-4 text-sm">Testimonios</h2>
+                    <h3 class="text-4xl md:text-6xl font-display font-bold tracking-tight gsap-fade-up">
+                        Lo que dicen <span class="text-gradient">nuestros clientes</span>.
+                    </h3>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+                    <figure class="testimonial-card p-8 rounded-2xl bg-brand-surface border border-brand-border hover:border-brand-accent/40 transition-all duration-500 hover:-translate-y-1 gsap-fade-up" data-cursor-hover>
+                        <div class="flex items-center gap-4 mb-6">
+                            <img src="images/maria-lopez-200.jpg"
+                                 srcset="images/maria-lopez-120.jpg 120w,
+                                         images/maria-lopez-200.jpg 200w,
+                                         images/maria-lopez-400.jpg 400w"
+                                 sizes="56px"
+                                 width="56" height="56"
+                                 loading="lazy" decoding="async"
+                                 alt="Retrato de María López, CEO de Aura Cosméticos"
+                                 class="w-14 h-14 rounded-full object-cover"
+                                 onerror="this.onerror=null;this.src='https://placehold.co/120x120/141414/ffffff?text=ML';">
+                            <figcaption>
+                                <p class="font-display font-semibold">María López</p>
+                                <p class="text-sm text-brand-muted">CEO, Aura Cosméticos</p>
+                            </figcaption>
+                        </div>
+                        <i class="ph-fill ph-quotes text-3xl text-brand-accent/60 mb-3 block" aria-hidden="true"></i>
+                        <blockquote class="text-brand-text leading-relaxed">
+                            "NEXUS transformó por completo nuestra presencia online. Las conversiones subieron 3.2x en el primer trimestre tras el relanzamiento. Un equipo excepcional."
+                        </blockquote>
+                    </figure>
+
+                    <figure class="testimonial-card p-8 rounded-2xl bg-brand-surface border border-brand-border hover:border-brand-accent2/40 transition-all duration-500 hover:-translate-y-1 gsap-fade-up" data-cursor-hover>
+                        <div class="flex items-center gap-4 mb-6">
+                            <img src="images/andres-vega-200.jpg"
+                                 srcset="images/andres-vega-120.jpg 120w,
+                                         images/andres-vega-200.jpg 200w,
+                                         images/andres-vega-400.jpg 400w"
+                                 sizes="56px"
+                                 width="56" height="56"
+                                 loading="lazy" decoding="async"
+                                 alt="Retrato de Andrés Vega, Head of Product en Nova Banking"
+                                 class="w-14 h-14 rounded-full object-cover"
+                                 onerror="this.onerror=null;this.src='https://placehold.co/120x120/141414/ffffff?text=AV';">
+                            <figcaption>
+                                <p class="font-display font-semibold">Andrés Vega</p>
+                                <p class="text-sm text-brand-muted">Head of Product, Nova Banking</p>
+                            </figcaption>
+                        </div>
+                        <i class="ph-fill ph-quotes text-3xl text-brand-accent2/60 mb-3 block" aria-hidden="true"></i>
+                        <blockquote class="text-brand-text leading-relaxed">
+                            "La nueva app redujo un 47% los tickets de soporte y mejoró el NPS en 22 puntos. NEXUS entiende tanto el producto como el código, eso es raro."
+                        </blockquote>
+                    </figure>
+
+                    <figure class="testimonial-card p-8 rounded-2xl bg-brand-surface border border-brand-border hover:border-theme-card transition-all duration-500 hover:-translate-y-1 gsap-fade-up" data-cursor-hover>
+                        <div class="flex items-center gap-4 mb-6">
+                            <img src="images/lucia-fernandez-200.jpg"
+                                 srcset="images/lucia-fernandez-120.jpg 120w,
+                                         images/lucia-fernandez-200.jpg 200w,
+                                         images/lucia-fernandez-400.jpg 400w"
+                                 sizes="56px"
+                                 width="56" height="56"
+                                 loading="lazy" decoding="async"
+                                 alt="Retrato de Lucía Fernández, fundadora de Helio Studios"
+                                 class="w-14 h-14 rounded-full object-cover"
+                                 onerror="this.onerror=null;this.src='https://placehold.co/120x120/141414/ffffff?text=LF';">
+                            <figcaption>
+                                <p class="font-display font-semibold">Lucía Fernández</p>
+                                <p class="text-sm text-brand-muted">Fundadora, Helio Studios</p>
+                            </figcaption>
+                        </div>
+                        <i class="ph-fill ph-quotes text-3xl text-white/40 mb-3 block" aria-hidden="true"></i>
+                        <blockquote class="text-brand-text leading-relaxed">
+                            "Trabajamos con NEXUS en el rebranding de nuestra productora. Escucharon, iteraron rápido y entregaron un sistema visual que nos representa. Volveremos."
+                        </blockquote>
+                    </figure>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================
+             Contact
+             ============================================================ -->
+        <section id="contact" class="py-20 md:py-32 px-6 lg:px-12 max-w-7xl mx-auto relative overflow-hidden" aria-labelledby="contact-title">
+            <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] border contact-ring rounded-full pointer-events-none" aria-hidden="true"></div>
+            <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] border contact-ring rounded-full pointer-events-none animate-spin-slow" aria-hidden="true">
+                 <span class="w-4 h-4 bg-brand-accent rounded-full absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 shadow-[0_0_20px_#FF3366] block"></span>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-20 relative z-10">
+                <div class="gsap-fade-up">
+                    <h2 id="contact-title" class="text-5xl md:text-7xl font-display font-bold mb-6">Empecemos un <br><span class="text-gradient">nuevo proyecto</span>.</h2>
+                    <p class="text-xl text-brand-muted font-light mb-12 max-w-md">
+                        Ya sea un rediseño de marca o una aplicación web compleja, estamos listos para el desafío.
+                    </p>
+
+                    <div class="space-y-6">
+                        <div>
+                            <h5 class="text-sm uppercase tracking-widest text-brand-muted mb-2">Escríbenos</h5>
+                            <a href="mailto:hello@nexus.agency?subject=Hola%20NEXUS%20%E2%80%94%20me%20interesa%20un%20proyecto"
+                               class="text-2xl font-medium hover:text-brand-accent transition-colors duration-200"
+                               data-cursor-hover>hello@nexus.agency</a>
+                        </div>
+                        <div>
+                            <h5 class="text-sm uppercase tracking-widest text-brand-muted mb-2">Visítanos</h5>
+                            <address class="text-xl font-medium not-italic">Distrito Creativo, Piso 4<br>Lima, Perú</address>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-brand-surface/80 p-8 md:p-12 rounded-2xl border border-brand-border backdrop-blur-md gsap-fade-up">
+                    <form id="contact-form" novalidate class="space-y-8" aria-describedby="form-feedback">
+                        <!-- Honeypot: bots fill this; humans never see it. -->
+                        <div aria-hidden="true" style="position:absolute;left:-9999px;top:-9999px;width:1px;height:1px;overflow:hidden;">
+                            <label for="website">Website</label>
+                            <input type="text" id="website" name="website" tabindex="-1" autocomplete="off">
+                        </div>
+
+                        <div class="relative group">
+                            <input type="text" id="name" name="name" required autocomplete="name"
+                                   aria-required="true" aria-describedby="err-name"
+                                   class="field w-full bg-transparent border-b border-white/20 py-4 focus:outline-none focus:border-brand-accent peer placeholder-transparent"
+                                   placeholder="Tu Nombre">
+                            <label for="name" class="form-label absolute left-0 top-4 text-lg transition-all duration-200 peer-focus:-top-3 peer-focus:text-xs peer-focus:text-brand-accent peer-valid:-top-3 peer-valid:text-xs">Tu Nombre</label>
+                            <p id="err-name" class="form-error hidden text-xs text-brand-error mt-2" role="alert"></p>
+                        </div>
+
+                        <div class="relative group">
+                            <input type="email" id="email" name="email" required autocomplete="email"
+                                   aria-required="true" aria-describedby="err-email"
+                                   class="field w-full bg-transparent border-b border-white/20 py-4 focus:outline-none focus:border-brand-accent peer placeholder-transparent"
+                                   placeholder="Tu Correo">
+                            <label for="email" class="form-label absolute left-0 top-4 text-lg transition-all duration-200 peer-focus:-top-3 peer-focus:text-xs peer-focus:text-brand-accent peer-valid:-top-3 peer-valid:text-xs">Tu Correo</label>
+                            <p id="err-email" class="form-error hidden text-xs text-brand-error mt-2" role="alert"></p>
+                        </div>
+
+                        <div class="relative group">
+                            <textarea id="message" name="message" rows="4" required
+                                      aria-required="true" aria-describedby="err-message"
+                                      class="field w-full bg-transparent border-b border-white/20 py-4 focus:outline-none focus:border-brand-accent peer placeholder-transparent resize-none"
+                                      placeholder="Cuéntanos sobre tu proyecto"></textarea>
+                            <label for="message" class="form-label absolute left-0 top-4 text-lg transition-all duration-200 peer-focus:-top-3 peer-focus:text-xs peer-focus:text-brand-accent peer-valid:-top-3 peer-valid:text-xs">Cuéntanos sobre tu proyecto</label>
+                            <p id="err-message" class="form-error hidden text-xs text-brand-error mt-2" role="alert"></p>
+                        </div>
+
+                        <button type="submit"
+                                class="w-full py-4 btn-inverse rounded-full font-bold uppercase tracking-wider"
+                                data-cursor-hover>
+                            <span class="btn-label">Enviar Mensaje</span>
+                        </button>
+
+                        <p id="form-feedback" class="form-feedback text-sm text-center font-medium min-h-[1.25rem]" aria-live="polite" aria-atomic="true"></p>
+                    </form>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- ============================================================
+         Footer
+         ============================================================ -->
+    <footer class="bg-brand-bg py-16 border-t border-white/10 relative z-10">
+        <div class="max-w-7xl mx-auto px-6 lg:px-12 grid grid-cols-1 md:grid-cols-4 gap-10 mb-12">
+            <div>
+                <a href="#main" class="inline-flex items-center gap-2 text-xl font-display font-bold mb-4" data-cursor-hover>
+                    <i class="ph-fill ph-planet text-brand-accent" aria-hidden="true"></i> NEXUS
+                </a>
+                <p class="text-sm text-brand-muted leading-relaxed">
+                    Estrategia, branding y desarrollo digital para marcas que buscan destacar.
+                </p>
+            </div>
+
+            <nav aria-label="Enlaces rápidos">
+                <h5 class="text-sm font-semibold uppercase tracking-widest mb-4">Navegación</h5>
+                <ul class="space-y-2 text-sm text-brand-muted">
+                    <li><a href="#services" class="hover:text-brand-text transition-colors" data-cursor-hover>Servicios</a></li>
+                    <li><a href="#metodologia" class="hover:text-brand-text transition-colors" data-cursor-hover>Metodología</a></li>
+                    <li><a href="#work" class="hover:text-brand-text transition-colors" data-cursor-hover>Trabajo</a></li>
+                    <li><a href="#testimonios" class="hover:text-brand-text transition-colors" data-cursor-hover>Testimonios</a></li>
+                </ul>
+            </nav>
+
+            <nav aria-label="Sitio">
+                <h5 class="text-sm font-semibold uppercase tracking-widest mb-4">Sitio</h5>
+                <ul class="space-y-2 text-sm text-brand-muted">
+                    <li><a href="#contact" class="hover:text-brand-text transition-colors" data-cursor-hover>Contacto</a></li>
+                    <li><span role="link" aria-disabled="true" tabindex="0" class="opacity-50 cursor-not-allowed">Política de privacidad</span></li>
+                    <li><span role="link" aria-disabled="true" tabindex="0" class="opacity-50 cursor-not-allowed">Términos</span></li>
+                </ul>
+            </nav>
+
+            <div>
+                <h5 class="text-sm font-semibold uppercase tracking-widest mb-4">Síguenos</h5>
+                <div class="flex gap-5 text-2xl text-brand-muted mb-6">
+                    <a href="#" role="link" aria-disabled="true" tabindex="0" class="hover:text-brand-text transition-colors opacity-60" data-cursor-hover aria-label="Instagram (próximamente)"><i class="ph-fill ph-instagram-logo" aria-hidden="true"></i></a>
+                    <a href="#" role="link" aria-disabled="true" tabindex="0" class="hover:text-brand-text transition-colors opacity-60" data-cursor-hover aria-label="LinkedIn (próximamente)"><i class="ph-fill ph-linkedin-logo" aria-hidden="true"></i></a>
+                    <a href="#" role="link" aria-disabled="true" tabindex="0" class="hover:text-brand-text transition-colors opacity-60" data-cursor-hover aria-label="Behance (próximamente)"><i class="ph-fill ph-behance-logo" aria-hidden="true"></i></a>
+                    <a href="#" role="link" aria-disabled="true" tabindex="0" class="hover:text-brand-text transition-colors opacity-60" data-cursor-hover aria-label="Dribbble (próximamente)"><i class="ph-fill ph-dribbble-logo" aria-hidden="true"></i></a>
+                </div>
+                <a href="mailto:hello@nexus.agency?subject=Hola%20NEXUS" class="text-sm text-brand-muted hover:text-brand-accent transition-colors" data-cursor-hover>hello@nexus.agency</a>
+            </div>
+        </div>
+
+        <div class="max-w-7xl mx-auto px-6 lg:px-12 pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-brand-muted">
+            <p>&copy; <span id="year"></span> Nexus Agency. Todos los derechos reservados.</p>
+            <p>Hecho con intención en Lima, Perú.</p>
+        </div>
+    </footer>
+
+    <!-- Sticky mobile CTA — only visible < lg -->
+    <a href="mailto:hello@nexus.agency?subject=Hola%20NEXUS%20%E2%80%94%20me%20interesa%20un%20proyecto"
+       id="sticky-cta"
+       class="lg:hidden fixed bottom-6 right-6 z-40 px-5 py-3 rounded-full bg-brand-accent text-white font-semibold text-sm shadow-[0_8px_30px_rgba(255,51,102,0.4)] flex items-center gap-2 hover:bg-brand-accent/90 transition-colors"
+       data-cursor-hover>
+        <i class="ph-fill ph-chat-circle-dots text-lg" aria-hidden="true"></i>
+        Hablemos
+    </a>
+
+    <!-- Back to top pill — only visible after 50% scroll; hidden on mobile where the sticky Hablemos CTA lives -->
+    <button id="back-to-top" type="button"
+            class="hidden md:flex fixed bottom-6 right-6 z-40 w-11 h-11 rounded-full bg-brand-surface border border-brand-border text-brand-text hover:border-brand-accent hover:text-brand-accent transition-colors duration-200 items-center justify-center"
+            aria-label="Volver arriba"
+            data-cursor-hover>
+        <i class="ph ph-arrow-up" aria-hidden="true"></i>
+    </button>
+
+    <!-- ============================================================
+         Structured data (Organization + LocalBusiness)
+         ============================================================ -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "name": "NEXUS Creative Agency",
+        "url": "https://nexus.agency/",
+        "logo": "https://nexus.agency/logo.svg",
+        "description": "Agencia digital global especializada en estrategia, branding y desarrollo web de alto nivel.",
+        "email": "hello@nexus.agency",
+        "sameAs": [
+            "https://www.instagram.com/nexus.agency",
+            "https://www.linkedin.com/company/nexus-agency"
+        ],
+        "address": {
+            "@type": "PostalAddress",
+            "streetAddress": "Distrito Creativo, Piso 4",
+            "addressLocality": "Lima",
+            "addressCountry": "PE"
+        },
+        "location": {
+            "@type": "Place",
+            "name": "NEXUS HQ Lima",
+            "address": {
+                "@type": "PostalAddress",
+                "streetAddress": "Distrito Creativo, Piso 4",
+                "addressLocality": "Lima",
+                "addressCountry": "PE"
+            },
+            "geo": {
+                "@type": "GeoCoordinates",
+                "latitude": -12.0464,
+                "longitude": -77.0428
+            }
+        },
+        "areaServed": ["PE", "LATAM", "US", "ES"]
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "LocalBusiness",
+        "@id": "https://nexus.agency/#localbusiness",
+        "name": "NEXUS Creative Agency",
+        "image": "https://nexus.agency/og.jpg",
+        "telephone": "+51-1-000-0000",
+        "priceRange": "$$$",
+        "address": {
+            "@type": "PostalAddress",
+            "streetAddress": "Distrito Creativo, Piso 4",
+            "addressLocality": "Lima",
+            "addressCountry": "PE"
+        },
+        "openingHoursSpecification": [{
+            "@type": "OpeningHoursSpecification",
+            "dayOfWeek": ["Monday","Tuesday","Wednesday","Thursday","Friday"],
+            "opens": "09:00",
+            "closes": "18:00"
+        }]
+    }
+    </script>
+
+    <script>
+    (function () {
+        'use strict';
+
+        const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        const isTouch = window.matchMedia('(hover: none), (pointer: coarse)').matches;
+        const fmt = new Intl.NumberFormat('es-PE');
+
+        // ---- Footer year ----------------------------------------------------
+        const yearEl = document.getElementById('year');
+        if (yearEl) yearEl.textContent = new Date().getFullYear();
+
+        // ---- v3 Theme toggle (sun/moon) ------------------------------------
+        const themeButtons = document.querySelectorAll('.theme-toggle');
+        const THEME_KEY = 'nexus_theme';
+
+        function currentTheme() {
+            return document.documentElement.classList.contains('light') ? 'light' : 'dark';
+        }
+        function setTheme(next, persist) {
+            const root = document.documentElement;
+            if (next === 'light') root.classList.add('light');
+            else root.classList.remove('light');
+            const meta = document.querySelector('meta[name="theme-color"]');
+            if (meta) meta.setAttribute('content', next === 'light' ? '#F8F9FA' : '#0a0a0a');
+            themeButtons.forEach(btn => {
+                const isLight = (next === 'light');
+                btn.setAttribute('aria-pressed', isLight ? 'true' : 'false');
+                btn.setAttribute('aria-label', isLight ? 'Cambiar a modo oscuro' : 'Cambiar a modo claro');
+                // Animate icon swap (brief rotate + fade)
+                const sun  = btn.querySelector('.icon-sun');
+                const moon = btn.querySelector('.icon-moon');
+                [sun, moon].forEach(i => i && i.classList.add('is-swapping'));
+                setTimeout(() => {
+                    [sun, moon].forEach(i => i && i.classList.remove('is-swapping'));
+                }, 200);
+            });
+            if (persist) {
+                try { localStorage.setItem(THEME_KEY, next); } catch (e) { /* blocked */ }
+            }
+        }
+        themeButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                setTheme(currentTheme() === 'light' ? 'dark' : 'light', true);
+            });
+        });
+
+        // ---- Custom Cursor (skip if touch OR reduced motion) ---------------
+        const cursor = document.getElementById('cursor');
+        const follower = document.getElementById('cursor-follower');
+        if (cursor && follower && !isTouch && !reduceMotion) {
+            let mouseX = 0, mouseY = 0, followerX = 0, followerY = 0, rafId = null;
+            const onMove = (e) => {
+                mouseX = e.clientX; mouseY = e.clientY;
+                cursor.style.left = mouseX + 'px';
+                cursor.style.top  = mouseY + 'px';
+            };
+            const tick = () => {
+                followerX += (mouseX - followerX) * 0.15;
+                followerY += (mouseY - followerY) * 0.15;
+                follower.style.left = followerX + 'px';
+                follower.style.top  = followerY + 'px';
+                rafId = requestAnimationFrame(tick);
+            };
+            document.addEventListener('mousemove', onMove, { passive: true });
+            tick();
+            document.querySelectorAll('[data-cursor-hover], a, button').forEach(el => {
+                el.addEventListener('mouseenter', () => document.body.classList.add('hovering'));
+                el.addEventListener('mouseleave', () => document.body.classList.remove('hovering'));
+            });
+        }
+
+        // ---- Mobile menu (full a11y) ---------------------------------------
+        const menuBtn = document.getElementById('mobile-menu-btn');
+        const mobileMenu = document.getElementById('mobile-menu');
+        const mobileLinks = mobileMenu ? mobileMenu.querySelectorAll('a') : [];
+        let menuOpen = false;
+        let lastFocused = null;
+
+        const focusableSel = 'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
+        function openMenu() {
+            menuOpen = true;
+            lastFocused = document.activeElement;
+            mobileMenu.classList.remove('opacity-0', 'pointer-events-none');
+            mobileMenu.classList.add('opacity-100');
+            menuBtn.setAttribute('aria-expanded', 'true');
+            menuBtn.setAttribute('aria-label', 'Cerrar menú');
+            menuBtn.innerHTML = '<i class="ph ph-x" aria-hidden="true"></i>';
+            document.body.style.overflow = 'hidden';
+            // v3: stop Lenis while menu is open
+            if (window.__lenis) {
+                window.__lenis.stop();
+            }
+            // Move focus to the first link inside the menu
+            const firstLink = mobileMenu.querySelector('a');
+            if (firstLink) firstLink.focus({ preventScroll: true });
+        }
+        function closeMenu(returnFocus = true) {
+            menuOpen = false;
+            mobileMenu.classList.add('opacity-0', 'pointer-events-none');
+            mobileMenu.classList.remove('opacity-100');
+            menuBtn.setAttribute('aria-expanded', 'false');
+            menuBtn.setAttribute('aria-label', 'Abrir menú');
+            menuBtn.innerHTML = '<i class="ph ph-list" aria-hidden="true"></i>';
+            document.body.style.overflow = '';
+            if (window.__lenis) {
+                window.__lenis.start();
+            }
+            if (returnFocus && lastFocused) lastFocused.focus({ preventScroll: true });
+        }
+        function trapFocus(e) {
+            if (!menuOpen) return;
+            if (e.key !== 'Tab') return;
+            const items = Array.from(mobileMenu.querySelectorAll(focusableSel));
+            if (!items.length) return;
+            const first = items[0], last = items[items.length - 1];
+            if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+            else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+        }
+
+        if (menuBtn && mobileMenu) {
+            menuBtn.addEventListener('click', () => menuOpen ? closeMenu() : openMenu());
+            mobileLinks.forEach(link => {
+                link.addEventListener('click', () => { if (menuOpen) closeMenu(false); });
+            });
+            // Close on Escape; trap focus while open
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && menuOpen) closeMenu();
+                trapFocus(e);
+            });
+            // Close on click outside the menu content
+            mobileMenu.addEventListener('click', (e) => {
+                if (e.target === mobileMenu) closeMenu();
+            });
+        }
+
+        // ---- v3 Lenis: shared scroll state for navbar/progress/back-to-top ----
+        // The active Lenis instance (if any) is exposed at window.__lenis
+        // and the functions below read from it. Under reduced motion or
+        // when Lenis failed to load, they fall back to window.scrollY.
+        function getScroll() {
+            if (window.__lenis && typeof window.__lenis.scroll === 'number') {
+                return window.__lenis.scroll;
+            }
+            return window.scrollY || window.pageYOffset || 0;
+        }
+        function getLimit() {
+            if (window.__lenis && typeof window.__lenis.limit === 'number') {
+                return window.__lenis.limit;
+            }
+            return (document.documentElement.scrollHeight - window.innerHeight) || 1;
+        }
+
+        // ---- Navbar shadow: only on threshold cross ------------------------
+        const nav = document.getElementById('navbar');
+        let navShadowed = false;
+        function onScrollNav() {
+            const shouldShadow = getScroll() > 50;
+            if (shouldShadow !== navShadowed) {
+                navShadowed = shouldShadow;
+                if (shouldShadow) nav.classList.add('shadow-lg');
+                else nav.classList.remove('shadow-lg');
+            }
+        }
+        onScrollNav(); // initial check
+        window.addEventListener('scroll', onScrollNav, { passive: true });
+        // Also listen to Lenis once it initializes
+        document.addEventListener('lenis:init', (e) => {
+            e.detail.lenis.on('scroll', onScrollNav);
+        });
+
+        // ---- Scroll progress bar -------------------------------------------
+        const progressBar = document.getElementById('scroll-progress');
+        function updateProgress() {
+            const limit = getLimit();
+            const pct = Math.min(100, Math.max(0, (getScroll() / limit) * 100));
+            if (progressBar) progressBar.style.width = pct + '%';
+        }
+        updateProgress();
+        window.addEventListener('scroll', updateProgress, { passive: true });
+        document.addEventListener('lenis:init', (e) => {
+            e.detail.lenis.on('scroll', updateProgress);
+        });
+
+        // ---- Back to top pill ----------------------------------------------
+        const backToTop = document.getElementById('back-to-top');
+        function toggleBtt() {
+            const limit = getLimit();
+            const show = getScroll() > (limit * 0.5);
+            if (!backToTop) return;
+            if (show) { backToTop.classList.remove('hidden'); backToTop.classList.add('flex'); }
+            else      { backToTop.classList.add('hidden');    backToTop.classList.remove('flex'); }
+        }
+        toggleBtt();
+        window.addEventListener('scroll', toggleBtt, { passive: true });
+        document.addEventListener('lenis:init', (e) => {
+            e.detail.lenis.on('scroll', toggleBtt);
+        });
+        if (backToTop) backToTop.addEventListener('click', () => {
+            if (window.__lenis) {
+                window.__lenis.scrollTo(0, { immediate: reduceMotion });
+            } else {
+                window.scrollTo({ top: 0, behavior: reduceMotion ? 'auto' : 'smooth' });
+            }
+        });
+
+        // ---- GSAP guarded by reduced-motion preference ---------------------
+        // Note: this MUST run after DOMContentLoaded so that deferred scripts
+        // (GSAP, ScrollTrigger, Lenis) are available. The main IIFE runs
+        // during HTML parsing (at end of <body>), but defer scripts run
+        // after parsing completes. So we defer the GSAP init too.
+        function initGsapAndLenis() {
+        if (typeof gsap !== 'undefined' && typeof ScrollTrigger !== 'undefined') {
+            gsap.registerPlugin(ScrollTrigger);
+
+            // All non-essential motion is wrapped in matchMedia so it
+            // auto-disables when prefers-reduced-motion: reduce.
+            const mm = gsap.matchMedia();
+
+            mm.add('(prefers-reduced-motion: no-preference)', () => {
+                // ---- v3 Lenis smooth scroll integration ---------------------
+                let lenis = null;
+                if (typeof Lenis !== 'undefined') {
+                    lenis = new Lenis({
+                        lerp: 0.08,
+                        duration: 1.2,
+                        smoothWheel: true,
+                        wheelMultiplier: 1.0,
+                    });
+                    window.__lenis = lenis;
+                    document.dispatchEvent(new CustomEvent('lenis:init', { detail: { lenis } }));
+
+                    // Connect Lenis → ScrollTrigger
+                    lenis.on('scroll', ScrollTrigger.update);
+                    // Drive Lenis from GSAP ticker
+                    gsap.ticker.add((time) => { lenis.raf(time * 1000); });
+                    gsap.ticker.lagSmoothing(0);
+
+                    // data-lenis-prevent: stop Lenis on wheel inside these elements
+                    document.querySelectorAll('[data-lenis-prevent]').forEach(el => {
+                        el.addEventListener('wheel', (e) => e.stopPropagation(), { passive: false });
+                        el.addEventListener('touchmove', (e) => e.stopPropagation(), { passive: false });
+                    });
+
+                    // Anchor link interception (navbar clearance offset)
+                    document.querySelectorAll('a[href^="#"]').forEach(a => {
+                        a.addEventListener('click', (e) => {
+                            const href = a.getAttribute('href');
+                            if (!href || href === '#' || href.length < 2) return;
+                            const target = document.querySelector(href);
+                            if (!target) return;
+                            // Let the mobile menu handle its own close logic first
+                            if (a.closest('#mobile-menu') && menuOpen) return;
+                            e.preventDefault();
+                            lenis.scrollTo(target, { offset: -80 });
+                        });
+                    });
+                }
+
+                // Hero timeline
+                // v3.2 fix: added `clearProps: 'all'` on each tween so GSAP
+                // removes the inline transform/opacity after the animation
+                // completes. Without this, a known GSAP quirk with
+                // `from()` + `stagger: 0.1` was leaving the first staggered
+                // child (.gsap-hero-btn > *:first-child → "Ver Proyectos")
+                // stuck at the FROM state (transform: translateY(24px)) even
+                // though opacity had animated to 1. That made "Ver Proyectos"
+                // sit visibly lower than the other two CTAs.
+                // v3.2.1 fix: removed `y: 24` from the .gsap-hero-btn > * tween.
+                // The `clearProps: 'all'` from v3.2 cleaned the residual transform
+                // AFTER the animation, but during the first ~300-500ms the first
+                // child ("Ver Proyectos") was still at y=24 (or partway) while
+                // the other two were at y=0, producing visible drift. With `y`
+                // gone, the three CTAs now fade in (with stagger) at their final
+                // vertical position and stay aligned from t=0.
+                const tl = gsap.timeline();
+                tl.from('.gsap-hero-badge',     { y: 24, opacity: 0, duration: 0.8, ease: 'power3.out', delay: 0.2, clearProps: 'all' })
+                  .from('.gsap-hero-text span', { y: 100, opacity: 0, duration: 1,   stagger: 0.15, ease: 'power4.out', clearProps: 'all' }, '-=0.6')
+                  .from('.gsap-hero-sub',       { y: 24, opacity: 0, duration: 0.8, ease: 'power3.out', clearProps: 'all' }, '-=0.4')
+                  .from('.gsap-hero-btn > *',   { opacity: 0, duration: 0.6, stagger: 0.08, ease: 'power3.out', clearProps: 'all' }, '-=0.6');
+
+                // Generic fade-up on scroll
+                gsap.utils.toArray('.gsap-fade-up').forEach(el => {
+                    gsap.from(el, {
+                        scrollTrigger: { trigger: el, start: 'top 88%', toggleActions: 'play none none none' },
+                        y: 40, opacity: 0, duration: 1, ease: 'power3.out'
+                    });
+                });
+
+                // Project reveal + parallax
+                gsap.utils.toArray('.gsap-project').forEach(project => {
+                    const img = project.querySelector('img');
+                    const reveal = project.querySelector('.reveal-img');
+                    if (reveal) {
+                        gsap.fromTo(reveal,
+                            { clipPath: 'polygon(0 0, 100% 0, 100% 0%, 0 0%)' },
+                            {
+                                clipPath: 'polygon(0 0, 100% 0, 100% 100%, 0 100%)',
+                                duration: 1.5, ease: 'power4.inOut',
+                                scrollTrigger: { trigger: project, start: 'top 80%' }
+                            }
+                        );
+                    }
+                    if (img) {
+                        gsap.to(img, {
+                            yPercent: 8, ease: 'none',
+                            scrollTrigger: { trigger: project, start: 'top bottom', end: 'bottom top', scrub: true }
+                        });
+                    }
+                });
+
+                // aria-current="page" for nav links based on scroll position
+                const navLinks = document.querySelectorAll('.nav-link');
+                const sectionIds = Array.from(navLinks).map(a => a.getAttribute('href').replace('#', ''));
+                sectionIds.forEach(id => {
+                    const section = document.getElementById(id);
+                    if (!section) return;
+                    ScrollTrigger.create({
+                        trigger: section,
+                        start: 'top 50%',
+                        end: 'bottom 50%',
+                        onToggle: (self) => {
+                            if (!self.isActive) return;
+                            navLinks.forEach(a => a.removeAttribute('aria-current'));
+                            const link = document.querySelector('.nav-link[href="#' + id + '"]');
+                            if (link) link.setAttribute('aria-current', 'page');
+                        }
+                    });
+                });
+
+                return () => {
+                    if (lenis) {
+                        lenis.destroy();
+                        window.__lenis = null;
+                    }
+                    // ScrollTrigger cleans up automatically when the media query flips
+                };
+            });
+        }
+        }  // end initGsapAndLenis
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initGsapAndLenis);
+        } else {
+            initGsapAndLenis();
+        }
+
+        // ---- Impact Metrics: count-up via IntersectionObserver -------------
+        const counters = document.querySelectorAll('.counter');
+        if (counters.length && 'IntersectionObserver' in window) {
+            const easeOut = (t) => 1 - Math.pow(1 - t, 3);
+            const animateCount = (el) => {
+                const target = parseInt(el.dataset.target, 10) || 0;
+                const suffix = el.dataset.suffix || '';
+                if (reduceMotion) {
+                    el.textContent = fmt.format(target) + suffix;
+                    return;
+                }
+                const proxy = { val: 0 };
+                gsap.to(proxy, {
+                    val: target,
+                    duration: 1.8,
+                    ease: 'power3.out',
+                    onUpdate: () => { el.textContent = fmt.format(Math.round(proxy.val)) + suffix; },
+                    onComplete: () => { el.textContent = fmt.format(target) + suffix; }
+                });
+            };
+            const io = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        animateCount(entry.target);
+                        io.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.4 });
+            counters.forEach(c => io.observe(c));
+        }
+
+        // ---- Contact form: single submit handler, validation, aria-live ----
+        const form = document.getElementById('contact-form');
+        const feedback = document.getElementById('form-feedback');
+
+        function setError(inputId, msg) {
+            const errEl = document.getElementById('err-' + inputId);
+            if (errEl) {
+                errEl.textContent = msg;
+                errEl.classList.remove('hidden');
+            }
+        }
+        function clearError(inputId) {
+            const errEl = document.getElementById('err-' + inputId);
+            if (errEl) {
+                errEl.textContent = '';
+                errEl.classList.add('hidden');
+            }
+        }
+        function setFeedback(msg, state) {
+            if (!feedback) return;
+            feedback.classList.remove('text-brand-success', 'text-brand-error', 'text-brand-muted');
+            feedback.classList.add(state === 'success' ? 'text-brand-success' : state === 'error' ? 'text-brand-error' : 'text-brand-muted');
+            feedback.textContent = msg;
+        }
+
+        if (form) {
+            // Clear inline errors as the user types
+            form.querySelectorAll('input, textarea').forEach(input => {
+                input.addEventListener('input', () => clearError(input.id));
+            });
+
+            form.addEventListener('submit', function (e) {
+                e.preventDefault();
+
+                // Honeypot: silently no-op if the hidden field is filled
+                const honeypot = form.querySelector('input[name="website"]');
+                if (honeypot && honeypot.value.trim() !== '') {
+                    setFeedback('Gracias. Te contactaremos pronto.', 'success');
+                    setTimeout(() => { form.reset(); setFeedback('', null); }, 3000);
+                    return;
+                }
+
+                // Validate
+                const name = form.querySelector('#name');
+                const email = form.querySelector('#email');
+                const message = form.querySelector('#message');
+                let valid = true;
+
+                if (!name.value.trim() || name.value.trim().length < 2) { setError('name', 'Por favor, escribe tu nombre.'); valid = false; } else clearError('name');
+                const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!emailRe.test(email.value.trim())) { setError('email', 'Ingresa un correo válido.'); valid = false; } else clearError('email');
+                if (!message.value.trim() || message.value.trim().length < 10) { setError('message', 'Cuéntanos un poco más (mín. 10 caracteres).'); valid = false; } else clearError('message');
+
+                if (!valid) {
+                    setFeedback('Revisa los campos marcados e inténtalo de nuevo.', 'error');
+                    // Move focus to the first invalid field
+                    const firstInvalid = form.querySelector('.form-error:not(.hidden)');
+                    if (firstInvalid) {
+                        const id = firstInvalid.id.replace('err-', '');
+                        const target = document.getElementById(id);
+                        if (target) target.focus();
+                    }
+                    return;
+                }
+
+                // "Submit" — this is a static demo, so we just confirm and reset.
+                const btn = form.querySelector('button[type="submit"]');
+                const label = btn ? btn.querySelector('.btn-label') : null;
+                const original = label ? label.textContent : '';
+                if (label) label.textContent = '¡Enviado!';
+                if (btn) {
+                    // v3: btn uses .btn-inverse — toggle to success state via inline class swap
+                    btn.classList.add('bg-brand-success', 'text-white');
+                }
+                setFeedback('¡Mensaje enviado! Te contactaremos en menos de 24h.', 'success');
+                form.reset();
+
+                setTimeout(() => {
+                    if (label) label.textContent = original;
+                    if (btn) {
+                        btn.classList.remove('bg-brand-success', 'text-white');
+                    }
+                    setFeedback('', null);
+                }, 3000);
+            });
+        }
+    })();
+    </script>
+</body>
+</html>
